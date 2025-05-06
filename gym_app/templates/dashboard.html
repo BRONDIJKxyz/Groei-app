@@ -212,7 +212,11 @@
         const heatmapEl = document.getElementById('workout-heatmap');
         
         // Pre-render workout dates from server as JSON
-        const workoutDates = JSON.parse('{{ workouts|map(attribute="date.isoformat")|list|tojson|safe }}');
+        const workoutDates = [
+            {% for workout in workouts %}
+                "{{ workout.date.isoformat() }}"{% if not loop.last %},{% endif %}
+            {% endfor %}
+        ];
         
         // Create a year of calendar days
         const today = new Date();
