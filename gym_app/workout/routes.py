@@ -244,6 +244,35 @@ def add_exercise_to_workout():
         flash('An error occurred while adding the exercise', 'error')
         return redirect(url_for('workout.exercise_list'))
 
+@workout_bp.route('/<int:workout_id>/exercise/<int:exercise_id>/complete', methods=['POST'])
+@login_required
+def complete_exercise(workout_id, exercise_id):
+    """Mark an individual exercise as completed within a workout."""
+    try:
+        workout = Workout.query.get_or_404(workout_id)
+        
+        if workout.user_id != current_user.id:
+            flash('Access denied', 'danger')
+            return redirect(url_for('main.dashboard'))
+        
+        workout_exercise = WorkoutExercise.query.filter_by(
+            workout_id=workout_id, 
+            exercise_id=exercise_id
+        ).first_or_404()
+        
+        # Mark the exercise as completed
+        workout_exercise.completed = True
+        workout_exercise.completed_at = datetime.now()
+        
+        db.session.commit()
+        
+        flash(f'Exercise completed successfully!', 'success')
+        return redirect(url_for('workout.session', workout_id=workout_id))
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error completing exercise: {str(e)}", "error")
+        return redirect(url_for('workout.session', workout_id=workout_id))
+
 # API Routes for AJAX functionality
 @workout_bp.route('/api/exercises')
 @login_required

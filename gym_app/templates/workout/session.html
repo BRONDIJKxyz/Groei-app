@@ -76,7 +76,7 @@
         <div class="main-content">
             {% if exercises %}
                 {% for workout_exercise in exercises %}
-                    <div class="exercise-tracking-card" id="exercise-{{ workout_exercise.exercise_id }}">
+                    <div class="exercise-tracking-card{% if workout_exercise.completed %} completed{% endif %}" id="exercise-{{ workout_exercise.exercise_id }}">
                         <div class="exercise-tracking-header">
                             <h3 class="exercise-title">{{ workout_exercise.exercise.name }}</h3>
                             <span class="badge badge-primary">{{ workout_exercise.exercise.muscle_group|title }}</span>
@@ -99,42 +99,72 @@
                                         </div>
                                     </div>
                                 {% endfor %}
+                            {% else %}
+                                <div class="empty-sets-message">No sets tracked yet</div>
                             {% endif %}
-                            
+                        </div>
+                        
+                        <div class="exercise-tracking-actions">
                             <!-- Total weight summary -->
-                            <div class="total-weight">
+                            <div class="total-weight mb-3">
                                 Total: <span class="total-weight-value">{{ workout_exercise.total_weight }}</span> kg
                             </div>
                             
-                            <!-- Add set form -->
-                            <form action="{{ url_for('workout.add_set', workout_id=workout.id, exercise_id=workout_exercise.exercise_id) }}" method="POST" class="add-set-form">
-                                <div class="form-row">
-                                    <div class="form-group flex-1">
-                                        <label for="weight-{{ workout_exercise.exercise_id }}" class="form-label">Weight (kg)</label>
-                                        <input type="number" 
-                                               id="weight-{{ workout_exercise.exercise_id }}" 
-                                               name="weight" 
-                                               class="form-control" 
-                                               step="0.5" 
-                                               min="0" 
-                                               value="{{ workout_exercise.last_set_weight }}" 
-                                               required>
-                                    </div>
-                                    <div class="form-group flex-1 ml-2">
-                                        <label for="reps-{{ workout_exercise.exercise_id }}" class="form-label">Reps</label>
-                                        <input type="number" 
-                                               id="reps-{{ workout_exercise.exercise_id }}" 
-                                               name="reps" 
-                                               class="form-control" 
-                                               min="1" 
-                                               value="8" 
-                                               required>
-                                    </div>
-                                </div>
-                                <button type="submit" class="btn btn-primary btn-block">
-                                    <i class="fas fa-plus mr-2"></i> Log Set
+                            <div class="action-buttons mb-3">
+                                <button type="button" class="btn btn-sm add-set-btn" 
+                                        data-toggle="modal" 
+                                        data-target="#add-set-modal" 
+                                        data-exercise-id="{{ workout_exercise.exercise_id }}" 
+                                        data-exercise-name="{{ workout_exercise.exercise.name }}">
+                                    <i class="fas fa-plus-circle"></i> Add Set
                                 </button>
-                            </form>
+                                
+                                {% if not workout_exercise.completed %}
+                                    <form action="{{ url_for('workout.complete_exercise', workout_id=workout.id, exercise_id=workout_exercise.exercise_id) }}" method="post" class="d-inline ml-2">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-sm btn-success complete-exercise-btn">
+                                            <i class="fas fa-check-circle"></i> Complete Exercise
+                                        </button>
+                                    </form>
+                                {% else %}
+                                    <span class="badge badge-success ml-2">
+                                        <i class="fas fa-check-circle"></i> Completed {{ workout_exercise.completed_at.strftime('%H:%M') }}
+                                    </span>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Add set form -->
+                            {% if not workout_exercise.completed %}
+                                <form action="{{ url_for('workout.add_set', workout_id=workout.id, exercise_id=workout_exercise.exercise_id) }}" method="POST" class="add-set-form">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <div class="form-row">
+                                        <div class="form-group flex-1">
+                                            <label for="weight-{{ workout_exercise.exercise_id }}" class="form-label">Weight (kg)</label>
+                                            <input type="number" 
+                                                id="weight-{{ workout_exercise.exercise_id }}" 
+                                                name="weight" 
+                                                class="form-control" 
+                                                step="0.5" 
+                                                min="0" 
+                                                value="{{ workout_exercise.last_set_weight }}" 
+                                                required>
+                                        </div>
+                                        <div class="form-group flex-1 ml-2">
+                                            <label for="reps-{{ workout_exercise.exercise_id }}" class="form-label">Reps</label>
+                                            <input type="number" 
+                                                id="reps-{{ workout_exercise.exercise_id }}" 
+                                                name="reps" 
+                                                class="form-control" 
+                                                min="1" 
+                                                value="8" 
+                                                required>
+                                        </div>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary btn-block">
+                                        <i class="fas fa-plus mr-2"></i> Log Set
+                                    </button>
+                                </form>
+                            {% endif %}
                         </div>
                     </div>
                 {% endfor %}

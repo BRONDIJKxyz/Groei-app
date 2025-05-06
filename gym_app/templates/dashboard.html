@@ -1,205 +1,91 @@
 {% extends 'base.html' %}
 
-{% block title %}Your Dashboard - Groei App{% endblock %}
-
-{% block extra_css %}
-<style>
-    .dashboard-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 2rem;
-    }
-    
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 1rem;
-        margin-bottom: 2rem;
-    }
-    
-    .stat-card {
-        background-color: white;
-        border-radius: 8px;
-        padding: 1.5rem;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    }
-    
-    .stat-title {
-        color: var(--color-gray-500);
-        font-size: 0.875rem;
-        margin-bottom: 0.5rem;
-    }
-    
-    .stat-value {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: var(--color-gray-900);
-    }
-    
-    .calendar-wrapper {
-        overflow-x: auto;
-        padding-bottom: 1rem;
-    }
-    
-    .calendar-tooltip {
-        position: absolute;
-        background-color: var(--color-gray-800);
-        color: white;
-        padding: 0.5rem;
-        border-radius: 4px;
-        font-size: 0.75rem;
-        pointer-events: none;
-        opacity: 0;
-        transition: opacity 0.2s;
-        z-index: 10;
-    }
-    
-    .calendar-day:hover + .calendar-tooltip {
-        opacity: 1;
-    }
-    
-    .workouts-list {
-        margin-top: 2rem;
-    }
-    
-    .workout-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 1rem;
-        background-color: white;
-        border-radius: 8px;
-        margin-bottom: 0.75rem;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-        transition: transform 0.2s ease;
-    }
-    
-    .workout-item:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-    }
-    
-    .workout-date {
-        font-weight: 600;
-    }
-    
-    .workout-meta {
-        color: var(--color-gray-600);
-        font-size: 0.875rem;
-    }
-    
-    /* Responsive adjustments */
-    @media (max-width: 768px) {
-        .stats-grid {
-            grid-template-columns: repeat(2, 1fr);
-        }
-    }
-    
-    @media (max-width: 480px) {
-        .stats-grid {
-            grid-template-columns: 1fr;
-        }
-    }
-</style>
-{% endblock %}
+{% block title %}Dashboard - Groei App{% endblock %}
 
 {% block content %}
-<div class="dashboard-header">
-    <h1 class="text-2xl font-bold">Welcome back, {{ current_user.name }}!</h1>
-    <a href="{{ url_for('workout.new_workout') }}" class="btn btn-primary">
-        <i class="fas fa-plus mr-2"></i> New Workout
-    </a>
-</div>
-
-<!-- Stats overview -->
-<div class="stats-grid">
-    <div class="stat-card">
-        <div class="stat-title">Total Workouts</div>
-        <div class="stat-value">{{ workouts|length }}</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-title">This Month</div>
-        <div class="stat-value">{{ current_month_workouts|length }}</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-title">Current Streak</div>
-        <div class="stat-value">{{ streak }} day{% if streak != 1 %}s{% endif %}</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-title">Favorite Exercise</div>
-        <div class="stat-value">{{ favorite_exercise }}</div>
-    </div>
-</div>
-
-<!-- GitHub-style workout heatmap -->
-<div class="card">
-    <h2 class="card-title mb-4">Your Workout Activity</h2>
-    <div class="calendar-wrapper">
-        <div class="calendar-heatmap" id="workout-heatmap" data-workout-dates='{% if workouts %}[{% for workout in workouts %}"{{ workout.date.isoformat() }}"{% if not loop.last %},{% endif %}{% endfor %}]{% else %}[]{% endif %}'></div>
-        <div class="calendar-legend">
-            <div class="calendar-legend-item">
-                <div class="calendar-legend-color heat-level-0"></div>
-                <span>No workout</span>
-            </div>
-            <div class="calendar-legend-item">
-                <div class="calendar-legend-color heat-level-1"></div>
-                <span>Light</span>
-            </div>
-            <div class="calendar-legend-item">
-                <div class="calendar-legend-color heat-level-2"></div>
-                <span>Medium</span>
-            </div>
-            <div class="calendar-legend-item">
-                <div class="calendar-legend-color heat-level-3"></div>
-                <span>Heavy</span>
-            </div>
-            <div class="calendar-legend-item">
-                <div class="calendar-legend-color heat-level-4"></div>
-                <span>Intense</span>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Recent workouts list -->
-<div class="workouts-list">
-    <h2 class="text-xl font-bold mb-4">Recent Workouts</h2>
+<div class="dashboard container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-8">Your Dashboard</h1>
     
-    {% if workouts %}
-        {% for workout in workouts[:5] %}
-            <a href="{{ url_for('workout.session', workout_id=workout.id) }}" class="workout-item">
-                <div>
-                    <div class="workout-date">{{ workout.date.strftime('%B %d, %Y') }}</div>
-                    <div class="workout-meta">
-                        {% set exercise_count = workout.exercises|length %}
-                        {{ exercise_count }} exercise{% if exercise_count != 1 %}s{% endif %}
-                    </div>
-                </div>
-                <div>
-                    {% if workout.completed %}
-                        <span class="badge badge-success">Completed</span>
-                    {% else %}
-                        <span class="badge badge-secondary">In Progress</span>
-                    {% endif %}
-                </div>
-            </a>
-        {% endfor %}
-        
-        {% if workouts|length > 5 %}
-            <div class="text-center mt-4">
-                <a href="#" class="btn btn-outline">View All Workouts</a>
+    <div class="stats-container grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+        <div class="stat-card bg-white rounded-lg p-6 shadow">
+            <div class="stat-icon text-indigo-600 mb-4">
+                <i class="fas fa-calendar-check text-3xl"></i>
             </div>
-        {% endif %}
-    {% else %}
-        <div class="card text-center p-8">
-            <h3 class="text-lg font-semibold">No workouts yet</h3>
-            <p class="text-gray-600 mb-4">Start tracking your first workout today!</p>
-            <a href="{{ url_for('workout.new_workout') }}" class="btn btn-primary">
-                <i class="fas fa-plus mr-2"></i> Start Workout
-            </a>
+            <h3 class="stat-label text-gray-600 text-lg">Monthly Workouts</h3>
+            <p class="stat-value text-3xl font-bold">{{ monthly_workouts }}</p>
         </div>
-    {% endif %}
+        
+        <div class="stat-card bg-white rounded-lg p-6 shadow">
+            <div class="stat-icon text-indigo-600 mb-4">
+                <i class="fas fa-fire-alt text-3xl"></i>
+            </div>
+            <h3 class="stat-label text-gray-600 text-lg">Current Streak</h3>
+            <p class="stat-value text-3xl font-bold">{{ streak }} days</p>
+        </div>
+        
+        <div class="stat-card bg-white rounded-lg p-6 shadow">
+            <div class="stat-icon text-indigo-600 mb-4">
+                <i class="fas fa-dumbbell text-3xl"></i>
+            </div>
+            <h3 class="stat-label text-gray-600 text-lg">Total Workouts</h3>
+            <p class="stat-value text-3xl font-bold">{{ workouts|length }}</p>
+        </div>
+    </div>
+    
+    <div class="annual-activity mb-12">
+        <div class="section-header flex justify-between items-center mb-4">
+            <h2 class="text-2xl font-bold">Workout Activity</h2>
+            <div class="intensity-legend flex items-center">
+                <span class="text-sm mr-2">Less</span>
+                <div class="heat-level-0 legend-box"></div>
+                <div class="heat-level-1 legend-box"></div>
+                <div class="heat-level-2 legend-box"></div>
+                <div class="heat-level-3 legend-box"></div>
+                <div class="heat-level-4 legend-box"></div>
+                <span class="text-sm ml-2">More</span>
+            </div>
+        </div>
+        
+        {% if workout_data %}
+            <div id="workout-heatmap" class="calendar-heatmap" data-workout-dates='{{ workout_data|map(attribute="date")|list|tojson }}' data-workout-weights='{{ workout_data|map(attribute="total_weight")|list|tojson }}'></div>
+        {% else %}
+            <p class="text-gray-500 italic">No workout data available yet. Start working out to see your activity!</p>
+        {% endif %}
+    </div>
+    
+    <div class="recent-workouts">
+        <h2 class="text-2xl font-bold mb-4">Recent Workouts</h2>
+        
+        {% if workouts %}
+            <div class="workouts-list grid grid-cols-1 md:grid-cols-2 gap-4">
+                {% for workout_item in workout_data[:6] %}
+                    <div class="workout-card bg-white rounded-lg p-6 shadow hover:shadow-md transition-shadow">
+                        <div class="flex justify-between mb-3">
+                            <h3 class="text-xl font-semibold">{{ workout_item.workout.name or 'Workout ' ~ loop.index }}</h3>
+                            <span class="pill bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full text-sm font-medium">{{ workout_item.primary_muscle_group|capitalize }}</span>
+                        </div>
+                        <div class="mb-2 text-gray-600">
+                            <i class="fas fa-calendar-day mr-2"></i>{{ workout_item.workout.date.strftime('%B %d, %Y') }}
+                        </div>
+                        <div class="mb-3 text-gray-600">
+                            <i class="fas fa-weight-hanging mr-2"></i>{{ workout_item.total_weight|round|int }} kg total
+                        </div>
+                        <a href="{{ url_for('workout.session', workout_id=workout_item.workout.id) }}" class="btn btn-sm btn-outline block text-center w-full">
+                            View Details
+                        </a>
+                    </div>
+                {% endfor %}
+            </div>
+            
+            {% if workouts|length > 6 %}
+                <div class="text-center mt-6">
+                    <a href="#" class="btn btn-outline">View All Workouts</a>
+                </div>
+            {% endif %}
+        {% else %}
+            <p class="text-gray-500 italic">No workouts recorded yet. Start your fitness journey today!</p>
+        {% endif %}
+    </div>
 </div>
 {% endblock %}
 
@@ -210,8 +96,15 @@
         const heatmapEl = document.getElementById('workout-heatmap');
         if (!heatmapEl) return; // Exit if element doesn't exist
         
-        // Get workout dates from data attribute
-        const workoutData = heatmapEl.getAttribute('data-workout-dates');
+        // Get workout dates and weights from data attributes
+        const workoutDates = JSON.parse(heatmapEl.getAttribute('data-workout-dates') || '[]');
+        const workoutWeights = JSON.parse(heatmapEl.getAttribute('data-workout-weights') || '[]');
+        
+        // Create lookup object for date -> weight
+        const dateWeightMap = {};
+        for (let i = 0; i < workoutDates.length; i++) {
+            dateWeightMap[workoutDates[i]] = workoutWeights[i];
+        }
         
         // Create a year of calendar days
         const today = new Date();
@@ -220,6 +113,39 @@
         
         // Get day of week for oneYearAgo to align grid
         const startDayOfWeek = oneYearAgo.getDay();
+        
+        // Add day labels (Sun, Mon, etc.)
+        const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const dayLabelContainer = document.createElement('div');
+        dayLabelContainer.className = 'day-labels';
+        
+        // Empty first cell for alignment with month labels
+        const emptyLabel = document.createElement('div');
+        emptyLabel.className = 'day-label empty';
+        dayLabelContainer.appendChild(emptyLabel);
+        
+        for (let i = 0; i < 7; i++) {
+            const dayLabel = document.createElement('div');
+            dayLabel.className = 'day-label';
+            dayLabel.textContent = dayLabels[i];
+            dayLabelContainer.appendChild(dayLabel);
+        }
+        
+        heatmapEl.parentNode.insertBefore(dayLabelContainer, heatmapEl);
+        
+        // Add month labels
+        const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const monthLabelContainer = document.createElement('div');
+        monthLabelContainer.className = 'month-labels';
+        
+        for (let i = 0; i < 12; i++) {
+            const monthLabel = document.createElement('div');
+            monthLabel.className = 'month-label';
+            monthLabel.textContent = monthLabels[i];
+            monthLabelContainer.appendChild(monthLabel);
+        }
+        
+        heatmapEl.parentNode.insertBefore(monthLabelContainer, heatmapEl);
         
         // Add empty cells for alignment (if needed)
         for (let i = 0; i < startDayOfWeek; i++) {
@@ -234,50 +160,116 @@
             const date = new Date(oneYearAgo);
             date.setDate(oneYearAgo.getDate() + d);
             
-            // Check if this date has a workout
+            // Format date as ISO string for lookup (YYYY-MM-DD)
             const dateStr = date.toISOString().split('T')[0];
+            
+            // Determine intensity based on weight
             let intensity = 0;
+            let weight = dateWeightMap[dateStr] || 0;
             
-            // Count workouts on this day to determine intensity
-            let workoutsOnDay = 0;
-            JSON.parse(workoutData).forEach(w => {
-                const workoutDate = new Date(w);
-                if (workoutDate.toISOString().split('T')[0] === dateStr) {
-                    workoutsOnDay++;
-                }
-            });
-            
-            // Set intensity level based on number of workouts (for demo)
-            if (workoutsOnDay === 1) intensity = 1;
-            else if (workoutsOnDay === 2) intensity = 2;
-            else if (workoutsOnDay === 3) intensity = 3;
-            else if (workoutsOnDay > 3) intensity = 4;
+            // Set intensity level based on weight
+            if (weight > 0 && weight <= 500) intensity = 1;
+            else if (weight > 500 && weight <= 1000) intensity = 2;
+            else if (weight > 1000 && weight <= 2000) intensity = 3;
+            else if (weight > 2000) intensity = 4;
             
             // Create day element
             const dayEl = document.createElement('div');
             dayEl.className = `calendar-day heat-level-${intensity}`;
             dayEl.setAttribute('data-date', dateStr);
-            dayEl.setAttribute('title', `${date.toLocaleDateString()}: ${workoutsOnDay} workout(s)`);
+            
+            // Add tooltip with date and weight info
+            let tooltipText = `${date.toLocaleDateString()}`;
+            if (weight > 0) {
+                tooltipText += `: ${Math.round(weight)} kg`;
+                
+                // Add intensity label
+                if (intensity === 1) tooltipText += " (Light)";
+                else if (intensity === 2) tooltipText += " (Medium)";
+                else if (intensity === 3) tooltipText += " (Heavy)";
+                else if (intensity === 4) tooltipText += " (Intense)";
+            } else {
+                tooltipText += ": No workout";
+            }
+            
+            dayEl.setAttribute('title', tooltipText);
             heatmapEl.appendChild(dayEl);
-            
-            // Add tooltip
-            const tooltip = document.createElement('div');
-            tooltip.className = 'calendar-tooltip';
-            tooltip.textContent = `${date.toLocaleDateString()}: ${workoutsOnDay} workout(s)`;
-            heatmapEl.appendChild(tooltip);
-            
-            // Show tooltip on hover
-            dayEl.addEventListener('mouseover', function(e) {
-                const rect = dayEl.getBoundingClientRect();
-                tooltip.style.left = `${rect.left}px`;
-                tooltip.style.top = `${rect.top - 30}px`;
-                tooltip.style.opacity = '1';
-            });
-            
-            dayEl.addEventListener('mouseout', function() {
-                tooltip.style.opacity = '0';
-            });
         }
     });
 </script>
+
+<style>
+    .calendar-heatmap {
+        display: grid;
+        grid-template-columns: repeat(53, 1fr);
+        grid-template-rows: repeat(7, 1fr);
+        gap: 3px;
+        margin-top: 20px;
+    }
+    
+    .day-labels {
+        display: grid;
+        grid-template-columns: 30px repeat(7, 1fr);
+        margin-bottom: 8px;
+    }
+    
+    .day-label {
+        font-size: 12px;
+        color: #718096;
+        text-align: center;
+    }
+    
+    .month-labels {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        margin-bottom: 8px;
+    }
+    
+    .month-label {
+        font-size: 12px;
+        color: #718096;
+        text-align: left;
+    }
+    
+    .calendar-day {
+        width: 12px;
+        height: 12px;
+        border-radius: 2px;
+        cursor: pointer;
+    }
+    
+    .heat-level-0 {
+        background-color: #ebedf0;
+    }
+    
+    .heat-level-1 {
+        background-color: #c6e48b;
+    }
+    
+    .heat-level-2 {
+        background-color: #7bc96f;
+    }
+    
+    .heat-level-3 {
+        background-color: #239a3b;
+    }
+    
+    .heat-level-4 {
+        background-color: #196127;
+    }
+    
+    .legend-box {
+        width: 12px;
+        height: 12px;
+        margin: 0 2px;
+        border-radius: 2px;
+    }
+    
+    .pill {
+        border-radius: 9999px;
+        padding: 4px 12px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+</style>
 {% endblock %}
