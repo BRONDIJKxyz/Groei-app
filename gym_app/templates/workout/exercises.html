@@ -69,20 +69,16 @@
                         </div>
                         <div class="exercise-title-area">
                             <h3 class="exercise-title text-xl font-bold">{{ exercise.name }}</h3>
-                            <div class="exercise-tags">
-                                <span class="badge badge-primary">{{ exercise.muscle_group|title }}</span>
-                                {% if exercise.difficulty %}
-                                <span class="badge badge-secondary">{{ exercise.difficulty|title }}</span>
-                                {% endif %}
-                                {% if exercise.is_compound %}
-                                <span class="badge badge-success">Compound</span>
-                                {% endif %}
+                            <div class="muscle-group-badge">
+                                <span class="badge badge-muscle" data-muscle="{{ exercise.muscle_group|lower }}">{{ exercise.muscle_group|title }}</span>
                             </div>
                         </div>
                     </div>
                     
                     <div class="exercise-content">
-                        <p class="exercise-description">{{ exercise.description|truncate(100) }}</p>
+                        <div class="exercise-description mt-2">
+                            <p>{% if exercise.description %}{{ exercise.description|truncate(120) }}{% else %}No description available.{% endif %}</p>
+                        </div>
                         
                         {% if exercise.equipment %}
                         <div class="exercise-equipment mt-2">
@@ -95,6 +91,15 @@
                             <strong>Also works:</strong> {{ exercise.secondary_muscle_groups }}
                         </div>
                         {% endif %}
+                        
+                        <div class="exercise-tags mt-2">
+                            {% if exercise.difficulty %}
+                            <span class="badge badge-secondary">{{ exercise.difficulty|title }}</span>
+                            {% endif %}
+                            {% if exercise.is_compound %}
+                            <span class="badge badge-success">Compound</span>
+                            {% endif %}
+                        </div>
                         
                         <div class="exercise-actions mt-4 flex gap-2">
                             <button class="btn btn-sm btn-primary add-to-workout-btn" data-exercise-id="{{ exercise.id }}">
@@ -275,6 +280,11 @@
     
     .badge-success {
         background-color: var(--color-success);
+        color: white;
+    }
+    
+    .badge-muscle {
+        background-color: var(--color-muscle);
         color: white;
     }
     
