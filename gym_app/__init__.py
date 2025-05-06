@@ -4,6 +4,7 @@ from flask_login import LoginManager
 from flask_migrate import Migrate
 import os
 from dotenv import load_dotenv
+from datetime import datetime
 
 # Load environment variables
 load_dotenv()
@@ -31,6 +32,11 @@ def create_app():
     migrate.init_app(app, db)
     login_manager.init_app(app)
     login_manager.login_view = 'auth.login'
+    
+    # Add context processor to make 'now' available in all templates
+    @app.context_processor
+    def inject_now():
+        return {'now': datetime.now()}
     
     with app.app_context():
         # Import and register blueprints
