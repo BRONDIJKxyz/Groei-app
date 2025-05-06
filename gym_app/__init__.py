@@ -13,6 +13,12 @@ db = SQLAlchemy()
 migrate = Migrate()
 login_manager = LoginManager()
 
+# User loader function
+@login_manager.user_loader
+def load_user(user_id):
+    from gym_app.models import User
+    return User.query.get(int(user_id))
+
 def create_app():
     # Initialize Flask app
     app = Flask(__name__)
