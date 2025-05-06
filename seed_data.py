@@ -533,11 +533,19 @@ def create_demo_user():
     
     return demo_user
 
-def create_sample_workouts(user, num_workouts=20):
+def create_sample_workouts(user, num_workouts=20, force_recreate=False):
     """Create sample workouts for the demo user."""
-    if Workout.query.filter_by(user_id=user.id).count() > 0:
+    if not force_recreate and Workout.query.filter_by(user_id=user.id).count() > 0:
         print("User already has workouts, skipping sample workout creation")
         return
+    
+    # If force_recreate is True, remove existing workouts
+    if force_recreate:
+        existing_workouts = Workout.query.filter_by(user_id=user.id).all()
+        for workout in existing_workouts:
+            db.session.delete(workout)
+        db.session.commit()
+        print(f"Removed {len(existing_workouts)} existing workouts for demo user")
     
     exercises = Exercise.query.all()
     
@@ -591,6 +599,6 @@ if __name__ == '__main__':
         seed_exercises()
         import_exercise_dataset()
         demo_user = create_demo_user()
-        create_sample_workouts(demo_user)
+        create_sample_workouts(demo_user, force_recreate=True)
         
         print("Database seeding completed successfully!")

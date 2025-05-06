@@ -19,15 +19,26 @@ def exercise_list():
     
     return render_template('workout/exercises.html', exercises=exercises)
 
-@workout_bp.route('/new')
+@workout_bp.route('/new', methods=['GET', 'POST'])
 @login_required
 def new_workout():
     """Start a new workout session."""
-    workout = Workout(user_id=current_user.id, date=datetime.now())
-    db.session.add(workout)
-    db.session.commit()
-    
-    return redirect(url_for('workout.session', workout_id=workout.id))
+    try:
+        workout = Workout(
+            user_id=current_user.id, 
+            date=datetime.now(),
+            name=f"Workout on {datetime.now().strftime('%B %d, %Y')}"
+        )
+        db.session.add(workout)
+        db.session.commit()
+        
+        return redirect(url_for('workout.session', workout_id=workout.id))
+    except Exception as e:
+        # Log the error
+        print(f"Error creating new workout: {str(e)}")
+        db.session.rollback()
+        flash("An error occurred while creating your workout. Please try again.", "error")
+        return redirect(url_for('main.dashboard'))
 
 @workout_bp.route('/<int:workout_id>')
 @login_required
