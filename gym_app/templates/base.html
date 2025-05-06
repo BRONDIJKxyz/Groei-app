@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Groei App - Your Workout Tracker{% endblock %}</title>
+    <!-- Favicon -->
+    <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/layout.css') }}">
+    {% block extra_css %}{% endblock %}
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="flex flex-col min-h-screen bg-gray-50">
+    <header class="bg-gradient-to-r from-indigo-600 to-blue-500 text-white shadow-md">
+        <nav class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <a href="{{ url_for('main.index') }}" class="text-2xl font-bold flex items-center">
+                <i class="fas fa-dumbbell mr-2"></i>
+                <span>Groei App</span>
+            </a>
+            <div>
+                {% if current_user.is_authenticated %}
+                    <div class="flex items-center">
+                        <a href="{{ url_for('main.dashboard') }}" class="px-3 py-2 rounded hover:bg-blue-700 transition">Dashboard</a>
+                        <a href="{{ url_for('workout.exercise_list') }}" class="px-3 py-2 rounded hover:bg-blue-700 transition">Exercises</a>
+                        <a href="{{ url_for('workout.new_workout') }}" class="px-3 py-2 ml-2 bg-green-600 rounded hover:bg-green-700 transition">
+                            <i class="fas fa-plus mr-1"></i> New Workout
+                        </a>
+                        <a href="{{ url_for('auth.logout') }}" class="px-3 py-2 ml-2 rounded hover:bg-blue-700 transition">
+                            <i class="fas fa-sign-out-alt mr-1"></i> Logout
+                        </a>
+                    </div>
+                {% else %}
+                    <div>
+                        <a href="{{ url_for('auth.login') }}" class="px-3 py-2 rounded hover:bg-blue-700 transition">Login</a>
+                        <a href="{{ url_for('auth.register') }}" class="px-3 py-2 ml-2 bg-green-600 rounded hover:bg-green-700 transition">Sign Up</a>
+                    </div>
+                {% endif %}
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-4 py-6 flex-grow">
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 mb-6">
+                    <ul>
+                        {% for message in messages %}
+                            <li>{{ message }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="bg-gray-800 text-gray-300 py-6">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between">
+                <div class="mb-4 md:mb-0">
+                    <h3 class="text-xl font-bold mb-2">Groei App</h3>
+                    <p>A minimalistic but powerful workout tracker</p>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-2">Quick Links</h4>
+                    <ul>
+                        <li><a href="{{ url_for('main.index') }}" class="hover:text-white transition">Home</a></li>
+                        {% if current_user.is_authenticated %}
+                            <li><a href="{{ url_for('main.dashboard') }}" class="hover:text-white transition">Dashboard</a></li>
+                            <li><a href="{{ url_for('workout.exercise_list') }}" class="hover:text-white transition">Exercises</a></li>
+                        {% else %}
+                            <li><a href="{{ url_for('auth.login') }}" class="hover:text-white transition">Login</a></li>
+                            <li><a href="{{ url_for('auth.register') }}" class="hover:text-white transition">Sign Up</a></li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+            <div class="mt-6 text-center text-sm">
+                <p>&copy; {{ now.year }} Groei App. Made by two gym bro's who love training and clean design.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

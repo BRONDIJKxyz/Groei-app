@@ -1,0 +1,128 @@
+/* layout.css - Layout-specific styles */
+
+/* Header */
+header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+/* Main Content Area */
+main {
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+}
+
+/* Card Layouts */
+.card {
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.card-header {
+  border-bottom: 1px solid var(--color-gray-200);
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+}
+
+.card-title {
+  font-weight: 600;
+  font-size: 1.25rem;
+  color: var(--color-gray-800);
+}
+
+/* Grid Layouts */
+.grid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.grid-cols-1 {
+  grid-template-columns: 1fr;
+}
+
+.grid-cols-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.grid-cols-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.grid-cols-4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+/* Responsive Layouts */
+@media (max-width: 1024px) {
+  .grid-cols-4 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .grid-cols-3, .grid-cols-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .grid-cols-2, .grid-cols-3, .grid-cols-4 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Calendar/Heatmap Layout - For GitHub-style workout tracking */
+.calendar-heatmap {
+  display: grid;
+  grid-template-columns: repeat(53, 1fr);
+  gap: 4px;
+  margin: 2rem 0;
+}
+
+.calendar-day {
+  aspect-ratio: 1;
+  border-radius: 2px;
+}
+
+.calendar-legend {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.calendar-legend-item {
+  display: flex;
+  align-items: center;
+}
+
+.calendar-legend-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 2px;
+  margin-right: 0.25rem;
+}
+
+/* Exercise List Layout */
+.exercise-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+/* Workout Session Layout */
+.workout-session {
+  display: grid;
+  grid-template-columns: 1fr 3fr;
+  gap: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .workout-session {
+    grid-template-columns: 1fr;
+  }
+}

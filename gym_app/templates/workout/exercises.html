@@ -1,0 +1,240 @@
+{% extends 'base.html' %}
+
+{% block title %}Exercises - Groei App{% endblock %}
+
+{% block content %}
+<div class="exercises-container">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold">Exercise Database</h1>
+        <div class="filter-controls">
+            <select id="muscle-group-filter" class="form-select">
+                <option value="">All Muscle Groups</option>
+                <option value="chest">Chest</option>
+                <option value="back">Back</option>
+                <option value="shoulders">Shoulders</option>
+                <option value="arms">Arms</option>
+                <option value="legs">Legs</option>
+                <option value="core">Core</option>
+                <option value="cardio">Cardio</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="exercise-list">
+        {% if exercises %}
+            {% for exercise in exercises %}
+                <div class="exercise-card" data-muscle-group="{{ exercise.muscle_group }}">
+                    <div class="exercise-image">
+                        {% if exercise.image_url %}
+                            <img src="{{ exercise.image_url }}" alt="{{ exercise.name }}">
+                        {% else %}
+                            <div class="exercise-placeholder-image">
+                                <i class="fas fa-dumbbell"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="exercise-content">
+                        <h3 class="exercise-title">{{ exercise.name }}</h3>
+                        <div class="exercise-muscle-group">
+                            <span class="badge badge-primary">{{ exercise.muscle_group|title }}</span>
+                        </div>
+                        <p class="exercise-description">{{ exercise.description|truncate(100) }}</p>
+                        <div class="exercise-actions mt-4">
+                            <button class="btn btn-sm btn-primary add-to-workout-btn" data-exercise-id="{{ exercise.id }}">
+                                <i class="fas fa-plus mr-1"></i> Add to Workout
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state card text-center p-8">
+                <i class="fas fa-dumbbell text-4xl text-gray-400 mb-4"></i>
+                <h3 class="text-xl font-semibold mb-2">No exercises found</h3>
+                <p class="text-gray-600 mb-4">Try changing your filter or come back later.</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Add Exercise to Workout Modal -->
+    <div id="add-exercise-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Add to Workout</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Select a workout to add this exercise to:</p>
+                <form id="add-to-workout-form" method="POST" action="">
+                    <input type="hidden" id="exercise-id-input" name="exercise_id">
+                    <div class="form-group">
+                        <select id="workout-select" name="workout_id" class="form-select">
+                            <option value="new">Start a new workout</option>
+                            <!-- Active workouts will be populated via JavaScript -->
+                        </select>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" class="btn btn-outline modal-close-btn">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Add Exercise</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .exercise-placeholder-image {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: var(--color-gray-200);
+        height: 100%;
+    }
+    
+    .exercise-placeholder-image i {
+        font-size: 3rem;
+        color: var(--color-gray-400);
+    }
+    
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 100;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .modal-content {
+        background-color: white;
+        border-radius: 0.5rem;
+        max-width: 500px;
+        width: 100%;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+    
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid var(--color-gray-200);
+    }
+    
+    .modal-title {
+        font-weight: 600;
+        font-size: 1.25rem;
+    }
+    
+    .modal-close {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: var(--color-gray-500);
+    }
+    
+    .modal-body {
+        padding: 1.5rem;
+    }
+    
+    .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.75rem;
+        margin-top: 1.5rem;
+    }
+    
+    .mt-4 {
+        margin-top: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Muscle group filter functionality
+    const muscleGroupFilter = document.getElementById('muscle-group-filter');
+    const exerciseCards = document.querySelectorAll('.exercise-card');
+    
+    muscleGroupFilter.addEventListener('change', function() {
+        const selectedMuscleGroup = this.value;
+        
+        exerciseCards.forEach(card => {
+            const cardMuscleGroup = card.getAttribute('data-muscle-group');
+            
+            if (selectedMuscleGroup === '' || cardMuscleGroup === selectedMuscleGroup) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    });
+    
+    // Modal functionality
+    const modal = document.getElementById('add-exercise-modal');
+    const addButtons = document.querySelectorAll('.add-to-workout-btn');
+    const closeButtons = document.querySelectorAll('.modal-close, .modal-close-btn');
+    const form = document.getElementById('add-to-workout-form');
+    const exerciseIdInput = document.getElementById('exercise-id-input');
+    const workoutSelect = document.getElementById('workout-select');
+    
+    // Fetch active workouts for the dropdown
+    fetch('/workout/api/active-workouts')
+        .then(response => response.json())
+        .then(workouts => {
+            if (workouts.length > 0) {
+                workouts.forEach(workout => {
+                    const option = document.createElement('option');
+                    option.value = workout.id;
+                    option.textContent = `Workout on ${new Date(workout.date).toLocaleDateString()}`;
+                    workoutSelect.appendChild(option);
+                });
+            }
+        })
+        .catch(error => console.error('Error fetching workouts:', error));
+    
+    // Show modal when Add to Workout is clicked
+    addButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const exerciseId = this.getAttribute('data-exercise-id');
+            exerciseIdInput.value = exerciseId;
+            modal.style.display = 'flex';
+        });
+    });
+    
+    // Close modal when close button is clicked
+    closeButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            modal.style.display = 'none';
+        });
+    });
+    
+    // Close modal when clicking outside the content
+    window.addEventListener('click', function(event) {
+        if (event.target === modal) {
+            modal.style.display = 'none';
+        }
+    });
+    
+    // Handle form submission
+    form.addEventListener('submit', function(event) {
+        const workoutId = workoutSelect.value;
+        
+        if (workoutId === 'new') {
+            // Start a new workout
+            form.action = "{{ url_for('workout.new_workout') }}";
+        } else {
+            // Add to existing workout
+            form.action = `/workout/${workoutId}/add`;
+        }
+    });
+});
+</script>
+{% endblock %}

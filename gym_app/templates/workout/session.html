@@ -1,0 +1,323 @@
+{% extends 'base.html' %}
+
+{% block title %}Workout Session - Groei App{% endblock %}
+
+{% block content %}
+<div class="workout-session-container">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold">
+            {% if workout.name %}
+                {{ workout.name }}
+            {% else %}
+                Workout on {{ workout.date.strftime('%B %d, %Y') }}
+            {% endif %}
+        </h1>
+        
+        <div class="workout-actions">
+            {% if not workout.completed %}
+                <form action="{{ url_for('workout.complete_workout', workout_id=workout.id) }}" method="POST" class="inline">
+                    <button type="submit" class="btn btn-success mr-2">
+                        <i class="fas fa-code-commit mr-2"></i> Complete Workout
+                    </button>
+                </form>
+            {% endif %}
+            <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline">
+                <i class="fas fa-arrow-left mr-2"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="workout-session">
+        <!-- Left sidebar: Add exercises -->
+        <div class="sidebar">
+            <div class="card">
+                <h2 class="text-xl font-semibold mb-4">Add Exercise</h2>
+                <div class="form-group">
+                    <label for="exercise-search" class="form-label">Search Exercises</label>
+                    <input type="text" id="exercise-search" class="form-control" placeholder="Search by name...">
+                </div>
+                
+                <div class="form-group">
+                    <label for="muscle-group-filter" class="form-label">Filter by Muscle Group</label>
+                    <select id="muscle-group-filter" class="form-select">
+                        <option value="">All Muscle Groups</option>
+                        <option value="chest">Chest</option>
+                        <option value="back">Back</option>
+                        <option value="shoulders">Shoulders</option>
+                        <option value="arms">Arms</option>
+                        <option value="legs">Legs</option>
+                        <option value="core">Core</option>
+                        <option value="cardio">Cardio</option>
+                    </select>
+                </div>
+                
+                <div class="exercises-list mt-4">
+                    {% if all_exercises %}
+                        {% for exercise in all_exercises %}
+                            <form action="{{ url_for('workout.add_exercise', workout_id=workout.id) }}" method="POST" class="exercise-item" data-muscle-group="{{ exercise.muscle_group }}">
+                                <input type="hidden" name="exercise_id" value="{{ exercise.id }}">
+                                <div class="flex-grow">
+                                    <h3 class="exercise-name">{{ exercise.name }}</h3>
+                                    <div class="exercise-muscle">{{ exercise.muscle_group|title }}</div>
+                                </div>
+                                <button type="submit" class="btn btn-sm btn-primary add-exercise-btn">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </form>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-gray-600">No exercises available</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main content: Current workout exercises -->
+        <div class="main-content">
+            {% if exercises %}
+                {% for workout_exercise in exercises %}
+                    <div class="exercise-tracking-card" id="exercise-{{ workout_exercise.exercise_id }}">
+                        <div class="exercise-tracking-header">
+                            <h3 class="exercise-title">{{ workout_exercise.exercise.name }}</h3>
+                            <span class="badge badge-primary">{{ workout_exercise.exercise.muscle_group|title }}</span>
+                        </div>
+                        
+                        <div class="sets-container">
+                            {% if workout_exercise.sets_data %}
+                                {% for set in workout_exercise.sets_data %}
+                                    <div class="set-card">
+                                        <div class="set-number">Set {{ loop.index }}</div>
+                                        <div class="set-details">
+                                            <div class="set-weight">
+                                                <span class="set-weight-value">{{ set.weight }}</span>
+                                                <span class="set-label">kg</span>
+                                            </div>
+                                            <div class="set-reps">
+                                                <span class="set-reps-value">{{ set.reps }}</span>
+                                                <span class="set-label">reps</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                            
+                            <!-- Total weight summary -->
+                            <div class="total-weight">
+                                Total: <span class="total-weight-value">{{ workout_exercise.total_weight }}</span> kg
+                            </div>
+                            
+                            <!-- Add set form -->
+                            <form action="{{ url_for('workout.add_set', workout_id=workout.id, exercise_id=workout_exercise.exercise_id) }}" method="POST" class="add-set-form">
+                                <div class="form-row">
+                                    <div class="form-group flex-1">
+                                        <label for="weight-{{ workout_exercise.exercise_id }}" class="form-label">Weight (kg)</label>
+                                        <input type="number" 
+                                               id="weight-{{ workout_exercise.exercise_id }}" 
+                                               name="weight" 
+                                               class="form-control" 
+                                               step="0.5" 
+                                               min="0" 
+                                               value="{{ workout_exercise.last_set_weight }}" 
+                                               required>
+                                    </div>
+                                    <div class="form-group flex-1 ml-2">
+                                        <label for="reps-{{ workout_exercise.exercise_id }}" class="form-label">Reps</label>
+                                        <input type="number" 
+                                               id="reps-{{ workout_exercise.exercise_id }}" 
+                                               name="reps" 
+                                               class="form-control" 
+                                               min="1" 
+                                               value="8" 
+                                               required>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-block">
+                                    <i class="fas fa-plus mr-2"></i> Log Set
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state card text-center p-8">
+                    <i class="fas fa-dumbbell text-4xl text-gray-400 mb-4"></i>
+                    <h3 class="text-xl font-semibold mb-2">No exercises added yet</h3>
+                    <p class="text-gray-600 mb-4">Add exercises from the sidebar to start logging your workout.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+    .workout-session-container {
+        margin-bottom: 2rem;
+    }
+    
+    .workout-session {
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        gap: 1.5rem;
+    }
+    
+    .sidebar {
+        position: sticky;
+        top: 80px; /* Allow space for the header */
+        height: calc(100vh - 80px);
+        overflow-y: auto;
+    }
+    
+    .main-content {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+    
+    .inline {
+        display: inline-block;
+    }
+    
+    .exercise-item {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem;
+        border-radius: 0.25rem;
+        border: 1px solid var(--color-gray-200);
+        margin-bottom: 0.5rem;
+        transition: background-color 0.2s ease;
+    }
+    
+    .exercise-item:hover {
+        background-color: var(--color-gray-100);
+    }
+    
+    .exercise-name {
+        font-weight: 500;
+        margin-bottom: 0.125rem;
+    }
+    
+    .exercise-muscle {
+        font-size: 0.75rem;
+        color: var(--color-gray-600);
+    }
+    
+    .exercise-tracking-card {
+        background-color: white;
+        border-radius: 0.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+    
+    .exercise-tracking-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        background-color: var(--color-gray-100);
+        border-bottom: 1px solid var(--color-gray-200);
+    }
+    
+    .sets-container {
+        padding: 1rem;
+    }
+    
+    .total-weight {
+        text-align: right;
+        padding: 0.75rem;
+        font-weight: 600;
+        color: var(--color-gray-800);
+        border-top: 1px solid var(--color-gray-200);
+        margin: 0.5rem 0;
+    }
+    
+    .total-weight-value {
+        color: var(--color-primary);
+    }
+    
+    .add-set-form {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px dashed var(--color-gray-200);
+    }
+    
+    .form-row {
+        display: flex;
+    }
+    
+    .flex-1 {
+        flex: 1;
+    }
+    
+    .btn-block {
+        display: block;
+        width: 100%;
+        margin-top: 0.75rem;
+    }
+    
+    .exercises-list {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    
+    /* Media query for mobile devices */
+    @media (max-width: 768px) {
+        .workout-session {
+            grid-template-columns: 1fr;
+        }
+        
+        .sidebar {
+            position: relative;
+            height: auto;
+            top: 0;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Exercise search functionality
+    const searchInput = document.getElementById('exercise-search');
+    const muscleGroupFilter = document.getElementById('muscle-group-filter');
+    const exerciseItems = document.querySelectorAll('.exercise-item');
+    
+    // Search filter function
+    function filterExercises() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const selectedMuscleGroup = muscleGroupFilter.value.toLowerCase();
+        
+        exerciseItems.forEach(item => {
+            const exerciseName = item.querySelector('.exercise-name').textContent.toLowerCase();
+            const muscleGroup = item.getAttribute('data-muscle-group').toLowerCase();
+            
+            const matchesSearch = exerciseName.includes(searchTerm);
+            const matchesMuscleGroup = selectedMuscleGroup === '' || muscleGroup === selectedMuscleGroup;
+            
+            if (matchesSearch && matchesMuscleGroup) {
+                item.style.display = 'flex';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    }
+    
+    // Add event listeners for filtering
+    searchInput.addEventListener('input', filterExercises);
+    muscleGroupFilter.addEventListener('change', filterExercises);
+    
+    // Smart suggestions for weight input
+    document.querySelectorAll('.add-set-form').forEach(form => {
+        const weightInput = form.querySelector('input[name="weight"]');
+        const repsInput = form.querySelector('input[name="reps"]');
+        
+        // Suggest weight increase after successful sets
+        form.addEventListener('submit', function() {
+            // Store the current values
+            localStorage.setItem('lastWeight', weightInput.value);
+            localStorage.setItem('lastReps', repsInput.value);
+        });
+    });
+});
+</script>
+{% endblock %}

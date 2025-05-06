@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block title %}Log In - Groei App{% endblock %}
+
+{% block content %}
+<div class="flex justify-center">
+    <div class="card max-w-md w-full">
+        <h1 class="text-2xl font-bold mb-6 text-center">Log In</h1>
+        
+        <form method="POST" action="{{ url_for('auth.login') }}">
+            <div class="form-group">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" id="email" name="email" class="form-control" placeholder="your@email.com" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="password" class="form-label">Password</label>
+                <input type="password" id="password" name="password" class="form-control" placeholder="••••••••" required>
+            </div>
+            
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center">
+                    <input type="checkbox" id="remember" name="remember" class="mr-2">
+                    <label for="remember" class="text-sm text-gray-600">Remember me</label>
+                </div>
+                <a href="#" class="text-sm text-primary hover:underline">Forgot Password?</a>
+            </div>
+            
+            <button type="submit" class="btn btn-primary w-full">
+                <i class="fas fa-sign-in-alt mr-2"></i> Log In
+            </button>
+        </form>
+        
+        <div class="mt-6 text-center">
+            <p class="text-gray-600">Don't have an account?</p>
+            <a href="{{ url_for('auth.register') }}" class="text-primary hover:underline">Sign up here</a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .max-w-md {
+        max-width: 28rem;
+    }
+    
+    .w-full {
+        width: 100%;
+    }
+</style>
+{% endblock %}

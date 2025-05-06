@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+
+{% block title %}Groei App - Track Your Growth{% endblock %}
+
+{% block content %}
+<div class="hero">
+    <div class="grid grid-cols-2">
+        <div class="hero-content">
+            <h1 class="text-4xl font-bold mb-4">Track Your Workouts Like Code Commits</h1>
+            <p class="text-lg mb-6">
+                A minimalistic but powerful workout tracker — designed to make logging your training sessions as 
+                intuitive and satisfying as committing code on GitHub.
+            </p>
+            <div class="flex">
+                <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-dumbbell mr-2"></i> Start Tracking Now
+                </a>
+                <a href="#features" class="btn btn-outline btn-lg ml-4">Learn More</a>
+            </div>
+        </div>
+        <div class="hero-image">
+            <img src="{{ url_for('static', filename='images/hero-image.svg') }}" alt="Workout tracking illustration">
+        </div>
+    </div>
+</div>
+
+<section id="features" class="py-12">
+    <h2 class="text-3xl font-bold text-center mb-8">Features</h2>
+    <div class="grid grid-cols-3">
+        <div class="feature-card">
+            <i class="fas fa-database text-4xl text-primary mb-4"></i>
+            <h3 class="text-xl font-semibold mb-2">Exercise Database</h3>
+            <p>Browse and filter exercises by muscle group for quick access</p>
+        </div>
+        <div class="feature-card">
+            <i class="fas fa-pencil text-4xl text-primary mb-4"></i>
+            <h3 class="text-xl font-semibold mb-2">Simple Logging</h3>
+            <p>Add weight, sets, and reps easily with minimal friction</p>
+        </div>
+        <div class="feature-card">
+            <i class="fas fa-arrows-rotate text-4xl text-primary mb-4"></i>
+            <h3 class="text-xl font-semibold mb-2">Flexible Flow</h3>
+            <p>Scroll and switch between exercises mid-workout with no rigid structure</p>
+        </div>
+        <div class="feature-card">
+            <i class="fas fa-chart-simple text-4xl text-primary mb-4"></i>
+            <h3 class="text-xl font-semibold mb-2">Cool Metrics</h3>
+            <p>Each exercise shows total lifted weight for that session</p>
+        </div>
+        <div class="feature-card">
+            <i class="fas fa-code-commit text-4xl text-primary mb-4"></i>
+            <h3 class="text-xl font-semibold mb-2">Finish Workout = Commit</h3>
+            <p>End your workout with a single click, like committing your progress</p>
+        </div>
+        <div class="feature-card">
+            <i class="fas fa-calendar-days text-4xl text-primary mb-4"></i>
+            <h3 class="text-xl font-semibold mb-2">Git-Style Timeline</h3>
+            <p>See a commit-style heatmap of your workouts on the overview page</p>
+        </div>
+    </div>
+</section>
+
+<section class="py-12 bg-gray-100">
+    <div class="container">
+        <h2 class="text-3xl font-bold text-center mb-8">Our Vision</h2>
+        <div class="card max-w-3xl mx-auto">
+            <p class="text-lg mb-4">
+                We want an app that feels natural — like flipping a notebook open, jotting down your workout, 
+                and closing it again. With just enough data to motivate you and nothing in your way.
+            </p>
+            <p class="text-center mt-6">
+                <a href="{{ url_for('auth.register') }}" class="btn btn-primary">
+                    <i class="fas fa-user-plus mr-2"></i> Sign Up Free
+                </a>
+            </p>
+        </div>
+    </div>
+</section>
+
+<style>
+.hero {
+    padding: 4rem 0;
+}
+
+.hero-content h1 {
+    color: var(--color-gray-900);
+    line-height: 1.2;
+}
+
+.hero-image {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.hero-image img {
+    max-width: 100%;
+    height: auto;
+}
+
+.feature-card {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 0.5rem;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    margin: 1rem;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+}
+
+.text-primary {
+    color: var(--color-primary);
+}
+
+.max-w-3xl {
+    max-width: 48rem;
+}
+</style>
+{% endblock %}
