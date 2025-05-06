@@ -4,4 +4,6 @@ python-dotenv==1.0.0
 Flask-Login==0.6.2
 Flask-WTF==1.2.1
 Werkzeug==2.3.7
-Flask-Migrate==4.0.5
+Flask-Migrate==4.1.0
+alembic==1.15.2
+SQLAlchemy==2.0.40

@@ -6,7 +6,10 @@
 <div class="exercises-container">
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-bold">Exercise Database</h1>
-        <div class="filter-controls">
+        <div class="filter-controls flex gap-3">
+            <div class="search-box">
+                <input type="text" id="search-filter" class="form-control" placeholder="Search exercises...">
+            </div>
             <select id="muscle-group-filter" class="form-select">
                 <option value="">All Muscle Groups</option>
                 <option value="chest">Chest</option>
@@ -17,38 +20,84 @@
                 <option value="core">Core</option>
                 <option value="cardio">Cardio</option>
             </select>
+            <select id="equipment-filter" class="form-select">
+                <option value="">All Equipment</option>
+                <option value="bodyweight">Bodyweight</option>
+                <option value="barbell">Barbell</option>
+                <option value="dumbbell">Dumbbell</option>
+                <option value="machine">Machine</option>
+                <option value="cable">Cable</option>
+            </select>
+            <select id="difficulty-filter" class="form-select">
+                <option value="">All Difficulties</option>
+                <option value="beginner">Beginner</option>
+                <option value="intermediate">Intermediate</option>
+                <option value="advanced">Advanced</option>
+            </select>
         </div>
     </div>
 
-    <div class="exercise-list">
+    <div class="exercise-list grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {% if exercises %}
             {% for exercise in exercises %}
-                <div class="exercise-card" data-muscle-group="{{ exercise.muscle_group }}">
-                    <div class="exercise-image">
-                        {% if exercise.image_url %}
-                            <img src="{{ exercise.image_url }}" alt="{{ exercise.name }}">
-                        {% else %}
-                            <div class="exercise-placeholder-image">
-                                <i class="fas fa-dumbbell"></i>
-                            </div>
-                        {% endif %}
-                    </div>
-                    <div class="exercise-content">
-                        <h3 class="exercise-title">{{ exercise.name }}</h3>
-                        <div class="exercise-muscle-group">
-                            <span class="badge badge-primary">{{ exercise.muscle_group|title }}</span>
+                <div class="exercise-card" 
+                     data-muscle-group="{{ exercise.muscle_group }}" 
+                     data-name="{{ exercise.name|lower }}"
+                     data-equipment="{{ exercise.equipment|default('') }}"
+                     data-difficulty="{{ exercise.difficulty|default('') }}"
+                     data-compound="{{ exercise.is_compound|default(False)|string|lower }}">
+                    <div class="exercise-header">
+                        <div class="exercise-image">
+                            {% if exercise.image_url %}
+                                <img src="{{ exercise.image_url }}" alt="{{ exercise.name }}">
+                            {% else %}
+                                <div class="exercise-placeholder-image">
+                                    <i class="fas fa-dumbbell"></i>
+                                </div>
+                            {% endif %}
                         </div>
+                        <div class="exercise-title-area">
+                            <h3 class="exercise-title text-xl font-bold">{{ exercise.name }}</h3>
+                            <div class="exercise-tags">
+                                <span class="badge badge-primary">{{ exercise.muscle_group|title }}</span>
+                                {% if exercise.difficulty %}
+                                <span class="badge badge-secondary">{{ exercise.difficulty|title }}</span>
+                                {% endif %}
+                                {% if exercise.is_compound %}
+                                <span class="badge badge-success">Compound</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="exercise-content">
                         <p class="exercise-description">{{ exercise.description|truncate(100) }}</p>
-                        <div class="exercise-actions mt-4">
+                        
+                        {% if exercise.equipment %}
+                        <div class="exercise-equipment mt-2">
+                            <strong>Equipment:</strong> {{ exercise.equipment }}
+                        </div>
+                        {% endif %}
+                        
+                        {% if exercise.secondary_muscle_groups %}
+                        <div class="exercise-secondary-muscles mt-2">
+                            <strong>Also works:</strong> {{ exercise.secondary_muscle_groups }}
+                        </div>
+                        {% endif %}
+                        
+                        <div class="exercise-actions mt-4 flex gap-2">
                             <button class="btn btn-sm btn-primary add-to-workout-btn" data-exercise-id="{{ exercise.id }}">
                                 <i class="fas fa-plus mr-1"></i> Add to Workout
+                            </button>
+                            <button class="btn btn-sm btn-outline view-details-btn" data-exercise-id="{{ exercise.id }}">
+                                <i class="fas fa-info-circle mr-1"></i> Details
                             </button>
                         </div>
                     </div>
                 </div>
             {% endfor %}
         {% else %}
-            <div class="empty-state card text-center p-8">
+            <div class="empty-state card text-center p-8 col-span-full">
                 <i class="fas fa-dumbbell text-4xl text-gray-400 mb-4"></i>
                 <h3 class="text-xl font-semibold mb-2">No exercises found</h3>
                 <p class="text-gray-600 mb-4">Try changing your filter or come back later.</p>
@@ -81,6 +130,66 @@
             </div>
         </div>
     </div>
+    
+    <!-- Exercise Details Modal -->
+    <div id="exercise-details-modal" class="modal">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h2 class="modal-title" id="detail-exercise-name">Exercise Details</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="exercise-detail-content">
+                    <div class="exercise-detail-image mb-4">
+                        <div id="detail-exercise-image" class="exercise-placeholder-image">
+                            <i class="fas fa-dumbbell"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="exercise-detail-info grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <h3 class="text-lg font-semibold mb-2">Primary Muscle Group</h3>
+                            <p id="detail-muscle-group">-</p>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold mb-2">Secondary Muscles</h3>
+                            <p id="detail-secondary-muscles">-</p>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold mb-2">Equipment</h3>
+                            <p id="detail-equipment">-</p>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold mb-2">Difficulty</h3>
+                            <p id="detail-difficulty">-</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h3 class="text-lg font-semibold mb-2">Description</h3>
+                        <p id="detail-description">-</p>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h3 class="text-lg font-semibold mb-2">Instructions</h3>
+                        <div id="detail-instructions" class="instructions-list">-</div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h3 class="text-lg font-semibold mb-2">Tips</h3>
+                        <p id="detail-tips">-</p>
+                    </div>
+                </div>
+                
+                <div class="modal-actions mt-6">
+                    <button type="button" class="btn btn-outline modal-close-btn">Close</button>
+                    <button type="button" class="btn btn-primary add-to-workout-btn" id="detail-add-to-workout" data-exercise-id="">
+                        <i class="fas fa-plus mr-1"></i> Add to Workout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <style>
@@ -89,12 +198,70 @@
         justify-content: center;
         align-items: center;
         background-color: var(--color-gray-200);
-        height: 100%;
+        height: 200px;
+        width: 100%;
     }
     
     .exercise-placeholder-image i {
         font-size: 3rem;
         color: var(--color-gray-400);
+    }
+    
+    .exercise-card {
+        border: 1px solid var(--color-gray-300);
+        border-radius: 8px;
+        overflow: hidden;
+        background-color: white;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .exercise-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+    }
+    
+    .exercise-content {
+        padding: 1rem;
+    }
+    
+    .exercise-header {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .exercise-title-area {
+        padding: 1rem;
+        background-color: var(--color-primary-50);
+    }
+    
+    .exercise-tags {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+    }
+    
+    .badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    
+    .badge-primary {
+        background-color: var(--color-primary);
+        color: white;
+    }
+    
+    .badge-secondary {
+        background-color: var(--color-secondary);
+        color: white;
+    }
+    
+    .badge-success {
+        background-color: var(--color-success);
+        color: white;
     }
     
     .modal {
@@ -104,31 +271,35 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background-color: rgba(0, 0, 0, 0.5);
-        z-index: 100;
-        justify-content: center;
-        align-items: center;
+        background-color: rgba(0,0,0,0.5);
+        z-index: 1000;
+        overflow-y: auto;
+        padding: 2rem 1rem;
     }
     
     .modal-content {
         background-color: white;
-        border-radius: 0.5rem;
-        max-width: 500px;
+        margin: 0 auto;
         width: 100%;
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        max-width: 500px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    .modal-lg {
+        max-width: 700px;
     }
     
     .modal-header {
+        padding: 1rem;
+        border-bottom: 1px solid var(--color-gray-300);
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 1rem 1.5rem;
-        border-bottom: 1px solid var(--color-gray-200);
     }
     
-    .modal-title {
-        font-weight: 600;
-        font-size: 1.25rem;
+    .modal-body {
+        padding: 1rem;
     }
     
     .modal-close {
@@ -136,105 +307,238 @@
         border: none;
         font-size: 1.5rem;
         cursor: pointer;
-        color: var(--color-gray-500);
-    }
-    
-    .modal-body {
-        padding: 1.5rem;
+        color: var(--color-gray-600);
     }
     
     .modal-actions {
         display: flex;
         justify-content: flex-end;
-        gap: 0.75rem;
-        margin-top: 1.5rem;
-    }
-    
-    .mt-4 {
+        gap: 0.5rem;
         margin-top: 1rem;
     }
+    
+    .instructions-list {
+        white-space: pre-line;
+    }
+    
+    .grid {
+        display: grid;
+    }
+    
+    .grid-cols-1 {
+        grid-template-columns: repeat(1, minmax(0, 1fr));
+    }
+    
+    @media (min-width: 768px) {
+        .md\:grid-cols-2 {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+    
+    @media (min-width: 1024px) {
+        .lg\:grid-cols-3 {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+    }
+    
+    .gap-6 {
+        gap: 1.5rem;
+    }
+    
+    .gap-4 {
+        gap: 1rem;
+    }
+    
+    .grid-cols-2 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    
+    .col-span-full {
+        grid-column: 1 / -1;
+    }
 </style>
+
 {% endblock %}
 
 {% block extra_js %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Muscle group filter functionality
-    const muscleGroupFilter = document.getElementById('muscle-group-filter');
-    const exerciseCards = document.querySelectorAll('.exercise-card');
-    
-    muscleGroupFilter.addEventListener('change', function() {
-        const selectedMuscleGroup = this.value;
+    document.addEventListener('DOMContentLoaded', function() {
+        // Filter functionality
+        const muscleGroupFilter = document.getElementById('muscle-group-filter');
+        const equipmentFilter = document.getElementById('equipment-filter');
+        const difficultyFilter = document.getElementById('difficulty-filter');
+        const searchFilter = document.getElementById('search-filter');
+        const exerciseCards = document.querySelectorAll('.exercise-card');
         
-        exerciseCards.forEach(card => {
-            const cardMuscleGroup = card.getAttribute('data-muscle-group');
+        function filterExercises() {
+            const muscleGroup = muscleGroupFilter.value.toLowerCase();
+            const equipment = equipmentFilter.value.toLowerCase();
+            const difficulty = difficultyFilter.value.toLowerCase();
+            const searchTerm = searchFilter.value.toLowerCase();
             
-            if (selectedMuscleGroup === '' || cardMuscleGroup === selectedMuscleGroup) {
-                card.style.display = 'block';
-            } else {
-                card.style.display = 'none';
+            exerciseCards.forEach(card => {
+                const cardMuscleGroup = card.dataset.muscleGroup.toLowerCase();
+                const cardName = card.dataset.name.toLowerCase();
+                const cardEquipment = card.dataset.equipment.toLowerCase();
+                const cardDifficulty = card.dataset.difficulty.toLowerCase();
+                
+                let visible = true;
+                
+                if (muscleGroup && cardMuscleGroup !== muscleGroup) {
+                    visible = false;
+                }
+                
+                if (equipment && cardEquipment.indexOf(equipment) === -1) {
+                    visible = false;
+                }
+                
+                if (difficulty && cardDifficulty !== difficulty) {
+                    visible = false;
+                }
+                
+                if (searchTerm && cardName.indexOf(searchTerm) === -1) {
+                    visible = false;
+                }
+                
+                card.style.display = visible ? 'block' : 'none';
+            });
+            
+            // Check if any exercises are visible
+            const visibleExercises = document.querySelectorAll('.exercise-card[style="display: block"]');
+            const emptyState = document.querySelector('.empty-state');
+            
+            if (visibleExercises.length === 0 && emptyState) {
+                emptyState.style.display = 'block';
+            } else if (emptyState) {
+                emptyState.style.display = 'none';
             }
-        });
-    });
-    
-    // Modal functionality
-    const modal = document.getElementById('add-exercise-modal');
-    const addButtons = document.querySelectorAll('.add-to-workout-btn');
-    const closeButtons = document.querySelectorAll('.modal-close, .modal-close-btn');
-    const form = document.getElementById('add-to-workout-form');
-    const exerciseIdInput = document.getElementById('exercise-id-input');
-    const workoutSelect = document.getElementById('workout-select');
-    
-    // Fetch active workouts for the dropdown
-    fetch('/workout/api/active-workouts')
-        .then(response => response.json())
-        .then(workouts => {
-            if (workouts.length > 0) {
-                workouts.forEach(workout => {
-                    const option = document.createElement('option');
-                    option.value = workout.id;
-                    option.textContent = `Workout on ${new Date(workout.date).toLocaleDateString()}`;
-                    workoutSelect.appendChild(option);
-                });
-            }
-        })
-        .catch(error => console.error('Error fetching workouts:', error));
-    
-    // Show modal when Add to Workout is clicked
-    addButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const exerciseId = this.getAttribute('data-exercise-id');
-            exerciseIdInput.value = exerciseId;
-            modal.style.display = 'flex';
-        });
-    });
-    
-    // Close modal when close button is clicked
-    closeButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            modal.style.display = 'none';
-        });
-    });
-    
-    // Close modal when clicking outside the content
-    window.addEventListener('click', function(event) {
-        if (event.target === modal) {
-            modal.style.display = 'none';
         }
-    });
-    
-    // Handle form submission
-    form.addEventListener('submit', function(event) {
-        const workoutId = workoutSelect.value;
         
-        if (workoutId === 'new') {
-            // Start a new workout
-            form.action = "{{ url_for('workout.new_workout') }}";
-        } else {
-            // Add to existing workout
-            form.action = `/workout/${workoutId}/add`;
+        // Add event listeners for filters
+        muscleGroupFilter.addEventListener('change', filterExercises);
+        equipmentFilter.addEventListener('change', filterExercises);
+        difficultyFilter.addEventListener('change', filterExercises);
+        searchFilter.addEventListener('input', filterExercises);
+        
+        // Modal functionality
+        const exerciseModal = document.getElementById('add-exercise-modal');
+        const detailsModal = document.getElementById('exercise-details-modal');
+        const addToWorkoutBtns = document.querySelectorAll('.add-to-workout-btn');
+        const viewDetailsBtns = document.querySelectorAll('.view-details-btn');
+        const closeBtns = document.querySelectorAll('.modal-close, .modal-close-btn');
+        const exerciseIdInput = document.getElementById('exercise-id-input');
+        const addToWorkoutForm = document.getElementById('add-to-workout-form');
+        
+        // Open "Add to Workout" modal
+        addToWorkoutBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const exerciseId = this.dataset.exerciseId;
+                exerciseIdInput.value = exerciseId;
+                addToWorkoutForm.action = `/workout/${exerciseId}/add`;
+                exerciseModal.style.display = 'block';
+                
+                // Fetch active workouts for the dropdown
+                fetchActiveWorkouts();
+            });
+        });
+        
+        // View details modal
+        viewDetailsBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const exerciseId = this.dataset.exerciseId;
+                // Fetch exercise details from API
+                fetchExerciseDetails(exerciseId);
+            });
+        });
+        
+        // Close modals
+        closeBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                exerciseModal.style.display = 'none';
+                detailsModal.style.display = 'none';
+            });
+        });
+        
+        // Close modal when clicking outside
+        window.addEventListener('click', function(event) {
+            if (event.target === exerciseModal) {
+                exerciseModal.style.display = 'none';
+            }
+            if (event.target === detailsModal) {
+                detailsModal.style.display = 'none';
+            }
+        });
+        
+        // Fetch active workouts for the user
+        function fetchActiveWorkouts() {
+            fetch('/workout/api/active-workouts')
+                .then(response => response.json())
+                .then(data => {
+                    const workoutSelect = document.getElementById('workout-select');
+                    
+                    // Clear existing options except the first one
+                    while (workoutSelect.options.length > 1) {
+                        workoutSelect.remove(1);
+                    }
+                    
+                    // Add active workouts to dropdown
+                    data.workouts.forEach(workout => {
+                        const option = document.createElement('option');
+                        option.value = workout.id;
+                        option.textContent = workout.name || `Workout on ${new Date(workout.date).toLocaleDateString()}`;
+                        workoutSelect.appendChild(option);
+                    });
+                })
+                .catch(error => console.error('Error fetching workouts:', error));
         }
+        
+        // Fetch exercise details for the modal
+        function fetchExerciseDetails(exerciseId) {
+            fetch(`/workout/api/exercises/${exerciseId}`)
+                .then(response => response.json())
+                .then(exercise => {
+                    // Populate the details modal
+                    document.getElementById('detail-exercise-name').textContent = exercise.name;
+                    document.getElementById('detail-muscle-group').textContent = exercise.muscle_group ? exercise.muscle_group.charAt(0).toUpperCase() + exercise.muscle_group.slice(1) : '-';
+                    document.getElementById('detail-secondary-muscles').textContent = exercise.secondary_muscle_groups || '-';
+                    document.getElementById('detail-equipment').textContent = exercise.equipment || '-';
+                    document.getElementById('detail-difficulty').textContent = exercise.difficulty ? exercise.difficulty.charAt(0).toUpperCase() + exercise.difficulty.slice(1) : '-';
+                    document.getElementById('detail-description').textContent = exercise.description || '-';
+                    
+                    if (exercise.instructions) {
+                        document.getElementById('detail-instructions').textContent = exercise.instructions;
+                    } else {
+                        document.getElementById('detail-instructions').textContent = '-';
+                    }
+                    
+                    document.getElementById('detail-tips').textContent = exercise.tips || '-';
+                    document.getElementById('detail-add-to-workout').dataset.exerciseId = exercise.id;
+                    
+                    // Show image if available
+                    const imageContainer = document.getElementById('detail-exercise-image');
+                    if (exercise.image_url) {
+                        imageContainer.innerHTML = `<img src="${exercise.image_url}" alt="${exercise.name}" class="w-full h-auto">`;
+                    } else {
+                        imageContainer.innerHTML = '<i class="fas fa-dumbbell"></i>';
+                    }
+                    
+                    // Show the modal
+                    detailsModal.style.display = 'block';
+                })
+                .catch(error => console.error('Error fetching exercise details:', error));
+        }
+        
+        // Add to workout from details modal
+        document.getElementById('detail-add-to-workout').addEventListener('click', function() {
+            const exerciseId = this.dataset.exerciseId;
+            exerciseIdInput.value = exerciseId;
+            addToWorkoutForm.action = `/workout/${exerciseId}/add`;
+            detailsModal.style.display = 'none';
+            exerciseModal.style.display = 'block';
+            
+            // Fetch active workouts for the dropdown
+            fetchActiveWorkouts();
+        });
     });
-});
 </script>
 {% endblock %}

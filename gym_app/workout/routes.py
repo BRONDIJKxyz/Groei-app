@@ -105,20 +105,63 @@ def add_set(workout_id, exercise_id):
 @workout_bp.route('/api/exercises')
 @login_required
 def api_exercises():
-    """API endpoint for exercises."""
-    muscle_group = request.args.get('muscle_group', None)
+    """API endpoint to get all exercises."""
+    exercises = Exercise.query.all()
     
-    if muscle_group:
-        exercises = Exercise.query.filter_by(muscle_group=muscle_group).all()
-    else:
-        exercises = Exercise.query.all()
+    result = []
+    for exercise in exercises:
+        result.append({
+            'id': exercise.id,
+            'name': exercise.name,
+            'muscle_group': exercise.muscle_group,
+            'description': exercise.description,
+            'image_url': exercise.image_url
+        })
     
-    return jsonify([{
-        'id': e.id, 
-        'name': e.name, 
-        'muscle_group': e.muscle_group,
-        'description': e.description
-    } for e in exercises])
+    return jsonify({'exercises': result})
+
+@workout_bp.route('/api/exercises/<int:exercise_id>')
+@login_required
+def api_exercise_detail(exercise_id):
+    """API endpoint to get a specific exercise's details."""
+    exercise = Exercise.query.get_or_404(exercise_id)
+    
+    result = {
+        'id': exercise.id,
+        'name': exercise.name,
+        'muscle_group': exercise.muscle_group,
+        'secondary_muscle_groups': exercise.secondary_muscle_groups,
+        'equipment': exercise.equipment,
+        'difficulty': exercise.difficulty,
+        'description': exercise.description,
+        'instructions': exercise.instructions,
+        'tips': exercise.tips,
+        'image_url': exercise.image_url,
+        'video_url': exercise.video_url,
+        'is_compound': exercise.is_compound,
+        'calories_per_hour': exercise.calories_per_hour
+    }
+    
+    return jsonify(result)
+
+@workout_bp.route('/api/active-workouts')
+@login_required
+def api_active_workouts():
+    """API endpoint to get user's active (incomplete) workouts."""
+    workouts = Workout.query.filter_by(
+        user_id=current_user.id,
+        completed=False
+    ).order_by(Workout.date.desc()).all()
+    
+    result = []
+    for workout in workouts:
+        result.append({
+            'id': workout.id,
+            'date': workout.date.isoformat(),
+            'name': workout.name,
+        })
+    
+    return jsonify({'workouts': result})
 
 @workout_bp.route('/api/<int:workout_id>/totals')
 @login_required

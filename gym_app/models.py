@@ -23,13 +23,28 @@ class Exercise(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     muscle_group = db.Column(db.String(50), nullable=False)
+    secondary_muscle_groups = db.Column(db.String(200), nullable=True)  # Comma-separated list
+    equipment = db.Column(db.String(100), nullable=True)
+    difficulty = db.Column(db.String(20), nullable=True)  # beginner, intermediate, advanced
     description = db.Column(db.Text, nullable=True)
+    instructions = db.Column(db.Text, nullable=True)
+    tips = db.Column(db.Text, nullable=True)
     image_url = db.Column(db.String(200), nullable=True)
+    video_url = db.Column(db.String(200), nullable=True)
+    is_compound = db.Column(db.Boolean, default=False)  # Is it a compound movement?
+    calories_per_hour = db.Column(db.Integer, nullable=True)  # Estimated calories burned per hour
     
     workout_exercises = db.relationship('WorkoutExercise', backref='exercise', lazy=True)
     
     def __repr__(self):
         return f'<Exercise {self.name}>'
+        
+    @property
+    def muscle_groups_list(self):
+        """Return secondary muscle groups as a list."""
+        if not self.secondary_muscle_groups:
+            return []
+        return [mg.strip() for mg in self.secondary_muscle_groups.split(',')]
 
 class Workout(db.Model):
     __tablename__ = 'workouts'
