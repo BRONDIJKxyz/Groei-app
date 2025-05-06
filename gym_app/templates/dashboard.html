@@ -3,89 +3,127 @@
 {% block title %}Dashboard - Groei App{% endblock %}
 
 {% block content %}
-<div class="dashboard container mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold mb-8">Your Dashboard</h1>
-    
-    <div class="stats-container grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-        <div class="stat-card bg-white rounded-lg p-6 shadow">
-            <div class="stat-icon text-indigo-600 mb-4">
-                <i class="fas fa-calendar-check text-3xl"></i>
+<div class="dashboard-container">
+    <header class="dashboard-header">
+        <h1>Your Dashboard</h1>
+        <a href="{{ url_for('workout.new_workout') }}" class="btn btn-primary">
+            <i class="fas fa-plus-circle"></i> New Workout
+        </a>
+    </header>
+
+    <!-- Stat Cards -->
+    <div class="stat-cards">
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-calendar-check"></i>
             </div>
-            <h3 class="stat-label text-gray-600 text-lg">Monthly Workouts</h3>
-            <p class="stat-value text-3xl font-bold">{{ monthly_workouts }}</p>
+            <div class="stat-content">
+                <h3 class="stat-value">{{ monthly_workouts }}</h3>
+                <p class="stat-label">Monthly Workouts</p>
+            </div>
         </div>
         
-        <div class="stat-card bg-white rounded-lg p-6 shadow">
-            <div class="stat-icon text-indigo-600 mb-4">
-                <i class="fas fa-fire-alt text-3xl"></i>
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-fire-alt"></i>
             </div>
-            <h3 class="stat-label text-gray-600 text-lg">Current Streak</h3>
-            <p class="stat-value text-3xl font-bold">{{ streak }} days</p>
+            <div class="stat-content">
+                <h3 class="stat-value">{{ streak }}</h3>
+                <p class="stat-label">Day Streak</p>
+            </div>
         </div>
         
-        <div class="stat-card bg-white rounded-lg p-6 shadow">
-            <div class="stat-icon text-indigo-600 mb-4">
-                <i class="fas fa-dumbbell text-3xl"></i>
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-dumbbell"></i>
             </div>
-            <h3 class="stat-label text-gray-600 text-lg">Total Workouts</h3>
-            <p class="stat-value text-3xl font-bold">{{ workouts|length }}</p>
+            <div class="stat-content">
+                <h3 class="stat-value">{{ workouts|length }}</h3>
+                <p class="stat-label">Total Workouts</p>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-medal"></i>
+            </div>
+            <div class="stat-content">
+                <h3 class="stat-value">{{ favorite_exercise }}</h3>
+                <p class="stat-label">Favorite Exercise</p>
+            </div>
         </div>
     </div>
-    
-    <div class="annual-activity mb-12">
-        <div class="section-header flex justify-between items-center mb-4">
-            <h2 class="text-2xl font-bold">Workout Activity</h2>
-            <div class="intensity-legend flex items-center">
-                <span class="text-sm mr-2">0 kg</span>
+
+    <!-- Workout Activity Heatmap -->
+    <section class="dashboard-section">
+        <div class="section-header">
+            <h2>Workout Activity</h2>
+            <div class="heatmap-legend">
+                <span>0 kg</span>
                 <div class="heat-level-0 legend-box"></div>
                 <div class="heat-level-1 legend-box"></div>
                 <div class="heat-level-2 legend-box"></div>
                 <div class="heat-level-3 legend-box"></div>
                 <div class="heat-level-4 legend-box"></div>
-                <span class="text-sm ml-2">2000+ kg</span>
+                <span>2000+ kg</span>
             </div>
         </div>
         
         {% if workout_data %}
-            <div id="workout-heatmap" class="calendar-heatmap" data-workout-dates='{{ workout_data|map(attribute="date")|list|tojson }}' data-workout-weights='{{ workout_data|map(attribute="total_weight")|list|tojson }}'></div>
+            <div class="heatmap-container">
+                <div id="workout-heatmap" class="calendar-heatmap" data-workout-dates='{{ workout_data|map(attribute="date")|list|tojson }}' data-workout-weights='{{ workout_data|map(attribute="total_weight")|list|tojson }}'></div>
+            </div>
         {% else %}
-            <p class="text-gray-500 italic">No workout data available yet. Start working out to see your activity!</p>
+            <div class="empty-state">
+                <i class="fas fa-calendar-alt"></i>
+                <p>No workout data available yet. Start working out to see your activity!</p>
+            </div>
         {% endif %}
-    </div>
+    </section>
     
-    <div class="recent-workouts">
-        <h2 class="text-2xl font-bold mb-4">Recent Workouts</h2>
+    <!-- Recent Workouts -->
+    <section class="dashboard-section">
+        <div class="section-header">
+            <h2>Recent Workouts</h2>
+            {% if workouts|length > 6 %}
+                <a href="#" class="section-link">View All</a>
+            {% endif %}
+        </div>
         
         {% if workouts %}
-            <div class="workouts-list grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="recent-workouts-grid">
                 {% for workout_item in workout_data[:6] %}
-                    <div class="workout-card bg-white rounded-lg p-6 shadow hover:shadow-md transition-shadow">
-                        <div class="flex justify-between mb-3">
-                            <h3 class="text-xl font-semibold">{{ workout_item.workout.name or 'Workout ' ~ loop.index }}</h3>
-                            <span class="pill bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full text-sm font-medium">{{ workout_item.primary_muscle_group|capitalize }}</span>
+                    <div class="workout-card">
+                        <div class="workout-header">
+                            <h3>{{ workout_item.workout.name or 'Workout ' ~ loop.index }}</h3>
+                            <span class="muscle-badge" data-muscle="{{ workout_item.primary_muscle_group|lower }}">
+                                {{ workout_item.primary_muscle_group|capitalize }}
+                            </span>
                         </div>
-                        <div class="mb-2 text-gray-600">
-                            <i class="fas fa-calendar-day mr-2"></i>{{ workout_item.workout.date.strftime('%B %d, %Y') }}
+                        <div class="workout-details">
+                            <div class="workout-date">
+                                <i class="fas fa-calendar-day"></i>
+                                {{ workout_item.workout.date.strftime('%B %d, %Y') }}
+                            </div>
+                            <div class="workout-weight">
+                                <i class="fas fa-weight-hanging"></i>
+                                {{ workout_item.total_weight|round|int }} kg total
+                            </div>
                         </div>
-                        <div class="mb-3 text-gray-600">
-                            <i class="fas fa-weight-hanging mr-2"></i>{{ workout_item.total_weight|round|int }} kg total
-                        </div>
-                        <a href="{{ url_for('workout.session', workout_id=workout_item.workout.id) }}" class="btn btn-sm btn-outline block text-center w-full">
-                            View Details
+                        <a href="{{ url_for('workout.session', workout_id=workout_item.workout.id) }}" class="workout-link">
+                            View Details <i class="fas fa-angle-right"></i>
                         </a>
                     </div>
                 {% endfor %}
             </div>
-            
-            {% if workouts|length > 6 %}
-                <div class="text-center mt-6">
-                    <a href="#" class="btn btn-outline">View All Workouts</a>
-                </div>
-            {% endif %}
         {% else %}
-            <p class="text-gray-500 italic">No workouts recorded yet. Start your fitness journey today!</p>
+            <div class="empty-state">
+                <i class="fas fa-dumbbell"></i>
+                <p>No workouts recorded yet. Start your fitness journey today!</p>
+                <a href="{{ url_for('workout.new_workout') }}" class="btn btn-primary">Start First Workout</a>
+            </div>
         {% endif %}
-    </div>
+    </section>
 </div>
 {% endblock %}
 
@@ -110,125 +148,282 @@
         const today = new Date();
         const oneYearAgo = new Date();
         oneYearAgo.setFullYear(today.getFullYear() - 1);
+        oneYearAgo.setDate(oneYearAgo.getDate() + 1); // Start from the day after
         
-        // Get day of week for oneYearAgo to align grid
-        const startDayOfWeek = oneYearAgo.getDay();
+        // Calculate correct starting positions to ensure proper month alignment
+        const firstDay = new Date(oneYearAgo.getFullYear(), oneYearAgo.getMonth(), 1);
+        let startDayOfWeek = firstDay.getDay(); // 0 = Sunday, 1 = Monday, etc.
         
-        // Add day labels (Sun, Mon, etc.)
-        const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-        const dayLabelContainer = document.createElement('div');
-        dayLabelContainer.className = 'day-labels';
-        
-        // Empty first cell for alignment with month labels
-        const emptyLabel = document.createElement('div');
-        emptyLabel.className = 'day-label empty';
-        dayLabelContainer.appendChild(emptyLabel);
-        
-        for (let i = 0; i < 7; i++) {
-            const dayLabel = document.createElement('div');
-            dayLabel.className = 'day-label';
-            dayLabel.textContent = dayLabels[i];
-            dayLabelContainer.appendChild(dayLabel);
-        }
-        
-        heatmapEl.parentNode.insertBefore(dayLabelContainer, heatmapEl);
-        
-        // Add month labels
-        const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        // Add month labels (properly positioned)
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
         const monthLabelContainer = document.createElement('div');
         monthLabelContainer.className = 'month-labels';
         
+        // Calculate month positions
+        const monthPositions = [];
+        let currentYear = oneYearAgo.getFullYear();
+        let currentMonth = oneYearAgo.getMonth();
+        
         for (let i = 0; i < 12; i++) {
+            const date = new Date(currentYear, currentMonth, 1);
+            const position = Math.floor((date - oneYearAgo) / (1000 * 60 * 60 * 24 * 7));
+            monthPositions.push({ month: months[currentMonth], position });
+            
+            currentMonth++;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+        }
+        
+        // Create the month labels based on calculated positions
+        for (let i = 0; i < monthPositions.length; i++) {
             const monthLabel = document.createElement('div');
             monthLabel.className = 'month-label';
-            monthLabel.textContent = monthLabels[i];
+            monthLabel.textContent = monthPositions[i].month;
+            monthLabel.style.gridColumn = monthPositions[i].position + 1;
             monthLabelContainer.appendChild(monthLabel);
         }
         
         heatmapEl.parentNode.insertBefore(monthLabelContainer, heatmapEl);
         
-        // Add empty cells for alignment (if needed)
-        for (let i = 0; i < startDayOfWeek; i++) {
-            const emptyDay = document.createElement('div');
-            emptyDay.className = 'calendar-day';
-            emptyDay.style.visibility = 'hidden';
-            heatmapEl.appendChild(emptyDay);
+        // Add day of week labels
+        const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const weekdayLabelContainer = document.createElement('div');
+        weekdayLabelContainer.className = 'weekday-labels';
+        
+        for (let i = 0; i < 7; i++) {
+            const dayLabel = document.createElement('div');
+            dayLabel.className = 'weekday-label';
+            dayLabel.textContent = weekdays[i];
+            weekdayLabelContainer.appendChild(dayLabel);
         }
         
-        // Create all days for the past year
-        for (let d = 0; d < 365; d++) {
-            const date = new Date(oneYearAgo);
-            date.setDate(oneYearAgo.getDate() + d);
+        heatmapEl.parentNode.insertBefore(weekdayLabelContainer, heatmapEl);
+        
+        // Create day cells for each week/day position
+        const totalDays = 53 * 7; // 53 weeks * 7 days per week
+        const startDate = new Date(oneYearAgo);
+        startDate.setDate(startDate.getDate() - startDate.getDay()); // Align to start of week (Sunday)
+        
+        // Create all cells for the entire grid
+        for (let i = 0; i < totalDays; i++) {
+            const cellDate = new Date(startDate);
+            cellDate.setDate(startDate.getDate() + i);
+            
+            const row = i % 7; // 0-6 (Sun-Sat)
+            const col = Math.floor(i / 7); // 0-52 weeks
             
             // Format date as ISO string for lookup (YYYY-MM-DD)
-            const dateStr = date.toISOString().split('T')[0];
+            const dateStr = cellDate.toISOString().split('T')[0];
             
-            // Determine intensity based on weight
+            // Check if this date is within our one year range
+            const isInRange = cellDate >= oneYearAgo && cellDate <= today;
+            
+            // Determine intensity based on weight (only for dates in range)
             let intensity = 0;
-            let weight = dateWeightMap[dateStr] || 0;
+            let weight = 0;
             
-            // Set intensity level based on weight
-            if (weight > 0 && weight <= 500) intensity = 1;
-            else if (weight > 500 && weight <= 1000) intensity = 2;
-            else if (weight > 1000 && weight <= 2000) intensity = 3;
-            else if (weight > 2000) intensity = 4;
+            if (isInRange && dateStr in dateWeightMap) {
+                weight = dateWeightMap[dateStr];
+                // Set intensity level based on weight
+                if (weight > 0 && weight <= 500) intensity = 1;
+                else if (weight > 500 && weight <= 1000) intensity = 2;
+                else if (weight > 1000 && weight <= 2000) intensity = 3;
+                else if (weight > 2000) intensity = 4;
+            }
             
             // Create day element
             const dayEl = document.createElement('div');
-            dayEl.className = `calendar-day heat-level-${intensity}`;
-            dayEl.setAttribute('data-date', dateStr);
+            dayEl.className = isInRange ? `calendar-day heat-level-${intensity}` : 'calendar-day out-of-range';
+            dayEl.style.gridRow = row + 1; // 1-based for CSS grid
+            dayEl.style.gridColumn = col + 1; // 1-based for CSS grid
             
             // Add tooltip with date and weight info
-            let tooltipText = `${date.toLocaleDateString()}`;
-            if (weight > 0) {
-                tooltipText += `: ${Math.round(weight)} kg`;
-                
-                // Add intensity label
-                if (intensity === 1) tooltipText += " (Light)";
-                else if (intensity === 2) tooltipText += " (Medium)";
-                else if (intensity === 3) tooltipText += " (Heavy)";
-                else if (intensity === 4) tooltipText += " (Intense)";
-            } else {
-                tooltipText += ": No workout";
+            if (isInRange) {
+                let tooltipText = `${cellDate.toLocaleDateString()}`;
+                if (weight > 0) {
+                    tooltipText += `: ${Math.round(weight)} kg`;
+                    
+                    // Add intensity label
+                    if (intensity === 1) tooltipText += " (Light)";
+                    else if (intensity === 2) tooltipText += " (Medium)";
+                    else if (intensity === 3) tooltipText += " (Heavy)";
+                    else if (intensity === 4) tooltipText += " (Intense)";
+                } else {
+                    tooltipText += ": No workout";
+                }
+                dayEl.setAttribute('title', tooltipText);
+                dayEl.setAttribute('data-date', dateStr);
             }
             
-            dayEl.setAttribute('title', tooltipText);
             heatmapEl.appendChild(dayEl);
         }
     });
 </script>
 
 <style>
+    /* Dashboard Layout */
+    .dashboard-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+    }
+    
+    .dashboard-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+    
+    .dashboard-header h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1F2937;
+        margin: 0;
+    }
+    
+    /* Stat Cards */
+    .stat-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2.5rem;
+    }
+    
+    .stat-card {
+        background-color: white;
+        border-radius: 0.75rem;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        display: flex;
+        align-items: center;
+    }
+    
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        background-color: #EEF2FF;
+        color: #4F46E5;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-right: 1rem;
+    }
+    
+    .stat-content {
+        flex: 1;
+    }
+    
+    .stat-value {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #1F2937;
+        margin: 0 0 0.25rem 0;
+    }
+    
+    .stat-label {
+        color: #6B7280;
+        font-size: 0.875rem;
+        margin: 0;
+    }
+    
+    /* Dashboard Sections */
+    .dashboard-section {
+        background-color: white;
+        border-radius: 0.75rem;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        margin-bottom: 2rem;
+    }
+    
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+    
+    .section-header h2 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #1F2937;
+        margin: 0;
+    }
+    
+    .section-link {
+        color: #4F46E5;
+        font-size: 0.875rem;
+        font-weight: 500;
+        text-decoration: none;
+    }
+    
+    .section-link:hover {
+        text-decoration: underline;
+    }
+    
+    /* Heatmap */
+    .heatmap-container {
+        position: relative;
+    }
+    
+    .heatmap-legend {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+    
+    .heatmap-legend span {
+        font-size: 0.75rem;
+        color: #6B7280;
+    }
+    
+    .legend-box {
+        width: 12px;
+        height: 12px;
+        border-radius: 2px;
+    }
+    
     .calendar-heatmap {
         display: grid;
         grid-template-columns: repeat(53, 1fr);
         grid-template-rows: repeat(7, 1fr);
         gap: 3px;
-        margin-top: 20px;
-    }
-    
-    .day-labels {
-        display: grid;
-        grid-template-columns: 30px repeat(7, 1fr);
-        margin-bottom: 8px;
-    }
-    
-    .day-label {
-        font-size: 12px;
-        color: #718096;
-        text-align: center;
+        margin: 0;
     }
     
     .month-labels {
         display: grid;
-        grid-template-columns: repeat(12, 1fr);
+        grid-template-columns: repeat(53, 1fr);
         margin-bottom: 8px;
+        height: 15px;
     }
     
     .month-label {
-        font-size: 12px;
-        color: #718096;
+        font-size: 0.75rem;
+        color: #6B7280;
         text-align: left;
+    }
+    
+    .weekday-labels {
+        position: absolute;
+        display: grid;
+        grid-template-rows: repeat(7, 1fr);
+        gap: 3px;
+        left: -30px;
+        top: 0;
+        height: 100%;
+    }
+    
+    .weekday-label {
+        font-size: 0.75rem;
+        color: #6B7280;
+        display: flex;
+        align-items: center;
+        height: 12px;
     }
     
     .calendar-day {
@@ -238,38 +433,164 @@
         cursor: pointer;
     }
     
+    .calendar-day.out-of-range {
+        visibility: hidden;
+    }
+    
     .heat-level-0 {
         background-color: #ebedf0;
     }
     
     .heat-level-1 {
-        background-color: #c6e48b;
+        background-color: #9be9a8;
     }
     
     .heat-level-2 {
-        background-color: #7bc96f;
+        background-color: #40c463;
     }
     
     .heat-level-3 {
-        background-color: #239a3b;
+        background-color: #30a14e;
     }
     
     .heat-level-4 {
-        background-color: #196127;
+        background-color: #216e39;
     }
     
-    .legend-box {
-        width: 12px;
-        height: 12px;
-        margin: 0 2px;
-        border-radius: 2px;
+    /* Recent Workouts */
+    .recent-workouts-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1rem;
     }
     
-    .pill {
-        border-radius: 9999px;
-        padding: 4px 12px;
-        font-size: 12px;
+    .workout-card {
+        border: 1px solid #E5E7EB;
+        border-radius: 0.5rem;
+        overflow: hidden;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .workout-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    .workout-header {
+        background-color: #F9FAFB;
+        padding: 1rem;
+        border-bottom: 1px solid #E5E7EB;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .workout-header h3 {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #1F2937;
+        margin: 0;
+    }
+    
+    .muscle-badge {
+        background-color: #4F46E5;
+        color: white;
+        font-size: 0.6875rem;
         font-weight: 500;
+        padding: 0.25rem 0.5rem;
+        border-radius: 9999px;
+    }
+    
+    /* Muscle group color coding */
+    .muscle-badge[data-muscle="chest"] {
+        background-color: #4F46E5;
+    }
+    
+    .muscle-badge[data-muscle="back"] {
+        background-color: #0EA5E9;
+    }
+    
+    .muscle-badge[data-muscle="legs"] {
+        background-color: #10B981;
+    }
+    
+    .muscle-badge[data-muscle="shoulders"] {
+        background-color: #F59E0B;
+    }
+    
+    .muscle-badge[data-muscle="arms"] {
+        background-color: #EF4444;
+    }
+    
+    .muscle-badge[data-muscle="abs"] {
+        background-color: #8B5CF6;
+    }
+    
+    .workout-details {
+        padding: 1rem;
+    }
+    
+    .workout-date, .workout-weight {
+        display: flex;
+        align-items: center;
+        font-size: 0.875rem;
+        color: #6B7280;
+        margin-bottom: 0.5rem;
+    }
+    
+    .workout-date i, .workout-weight i {
+        width: 16px;
+        margin-right: 0.5rem;
+        text-align: center;
+    }
+    
+    .workout-link {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background-color: #F9FAFB;
+        padding: 0.75rem 1rem;
+        color: #4F46E5;
+        font-size: 0.875rem;
+        font-weight: 500;
+        text-decoration: none;
+        border-top: 1px solid #E5E7EB;
+    }
+    
+    .workout-link:hover {
+        background-color: #F3F4F6;
+    }
+    
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: #6B7280;
+    }
+    
+    .empty-state i {
+        font-size: 2.5rem;
+        color: #E5E7EB;
+        margin-bottom: 1rem;
+    }
+    
+    .empty-state p {
+        margin-bottom: 1.5rem;
+    }
+    
+    @media (max-width: 768px) {
+        .workout-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .muscle-badge {
+            margin-top: 0.5rem;
+        }
+        
+        .weekday-labels {
+            display: none;
+        }
     }
 </style>
 {% endblock %}
