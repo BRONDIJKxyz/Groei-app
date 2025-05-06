@@ -24,7 +24,9 @@ def load_user(user_id):
 
 def create_app():
     # Initialize Flask app
-    app = Flask(__name__)
+    app = Flask(__name__, 
+                static_folder='../static',  # Use the static folder in the root directory
+                static_url_path='/static')
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'default-dev-key')
     app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///gym_app.db')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
