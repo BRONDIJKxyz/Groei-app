@@ -17,7 +17,20 @@ def exercise_list():
     else:
         exercises = Exercise.query.all()
     
-    return render_template('workout/exercises.html', exercises=exercises)
+    # For debugging
+    total_count = Exercise.query.count()
+    muscle_group_counts = {}
+    for group in ['chest', 'back', 'shoulders', 'arms', 'legs', 'core', 'cardio']:
+        muscle_group_counts[group] = Exercise.query.filter_by(muscle_group=group).count()
+    
+    print(f"Total exercises in database: {total_count}")
+    print(f"Exercises being sent to template: {len(exercises)}")
+    print(f"Muscle group counts: {muscle_group_counts}")
+    
+    return render_template('workout/exercises.html', 
+                          exercises=exercises, 
+                          total_count=total_count,
+                          muscle_group_counts=muscle_group_counts)
 
 @workout_bp.route('/new', methods=['GET', 'POST'])
 @login_required
@@ -31,6 +44,19 @@ def new_workout():
         )
         db.session.add(workout)
         db.session.commit()
+        
+        # If an exercise_id was provided, add it to the new workout
+        exercise_id = request.form.get('exercise_id')
+        if exercise_id:
+            exercise = Exercise.query.get(exercise_id)
+            if exercise:
+                workout_exercise = WorkoutExercise(
+                    workout_id=workout.id,
+                    exercise_id=exercise.id
+                )
+                db.session.add(workout_exercise)
+                db.session.commit()
+                flash(f'Added {exercise.name} to your workout!', 'success')
         
         return redirect(url_for('workout.session', workout_id=workout.id))
     except Exception as e:
@@ -63,17 +89,47 @@ def session(workout_id):
 @login_required
 def add_exercise(workout_id):
     """Add an exercise to current workout."""
-    exercise_id = request.form.get('exercise_id')
-    
-    workout_exercise = WorkoutExercise(
-        workout_id=workout_id,
-        exercise_id=exercise_id
-    )
-    
-    db.session.add(workout_exercise)
-    db.session.commit()
-    
-    return redirect(url_for('workout.session', workout_id=workout_id))
+    try:
+        exercise_id = request.form.get('exercise_id')
+        if not exercise_id:
+            flash('No exercise selected', 'error')
+            return redirect(url_for('workout.session', workout_id=workout_id))
+        
+        # Make sure the workout belongs to the current user
+        workout = Workout.query.get_or_404(workout_id)
+        if workout.user_id != current_user.id:
+            flash('Access denied', 'error')
+            return redirect(url_for('main.dashboard'))
+            
+        # Check if exercise exists
+        exercise = Exercise.query.get_or_404(exercise_id)
+        
+        # Check if exercise is already in the workout
+        existing = WorkoutExercise.query.filter_by(
+            workout_id=workout_id,
+            exercise_id=exercise_id
+        ).first()
+        
+        if existing:
+            flash(f'{exercise.name} is already in this workout', 'info')
+            return redirect(url_for('workout.session', workout_id=workout_id))
+        
+        # Add the exercise to the workout
+        workout_exercise = WorkoutExercise(
+            workout_id=workout_id,
+            exercise_id=exercise_id
+        )
+        
+        db.session.add(workout_exercise)
+        db.session.commit()
+        
+        flash(f'Added {exercise.name} to your workout!', 'success')
+        return redirect(url_for('workout.session', workout_id=workout_id))
+    except Exception as e:
+        print(f"Error adding exercise to workout: {str(e)}")
+        db.session.rollback()
+        flash("An error occurred while adding the exercise. Please try again.", "error")
+        return redirect(url_for('workout.session', workout_id=workout_id))
 
 @workout_bp.route('/<int:workout_id>/complete', methods=['POST'])
 @login_required

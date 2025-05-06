@@ -37,6 +37,17 @@
         </div>
     </div>
 
+    <!-- Debug stats - uncomment if needed -->
+    <div class="bg-gray-100 p-3 rounded mb-4">
+        <p>Total exercises in database: {{ total_count }}</p>
+        <p>Exercises displayed: <span id="displayed-count">0</span></p>
+        <div class="text-xs mt-2">
+            {% for group, count in muscle_group_counts.items() %}
+                <span class="mr-3">{{ group }}: {{ count }}</span>
+            {% endfor %}
+        </div>
+    </div>
+
     <div class="exercise-list grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {% if exercises %}
             {% for exercise in exercises %}
@@ -114,7 +125,8 @@
             </div>
             <div class="modal-body">
                 <p>Select a workout to add this exercise to:</p>
-                <form id="add-to-workout-form" method="POST" action="">
+                <form id="add-to-workout-form" method="POST" action="/workout/add-exercise">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <input type="hidden" id="exercise-id-input" name="exercise_id">
                     <div class="form-group">
                         <select id="workout-select" name="workout_id" class="form-select">
@@ -369,12 +381,15 @@
         const difficultyFilter = document.getElementById('difficulty-filter');
         const searchFilter = document.getElementById('search-filter');
         const exerciseCards = document.querySelectorAll('.exercise-card');
+        const displayedCount = document.getElementById('displayed-count');
         
         function filterExercises() {
             const muscleGroup = muscleGroupFilter.value.toLowerCase();
             const equipment = equipmentFilter.value.toLowerCase();
             const difficulty = difficultyFilter.value.toLowerCase();
             const searchTerm = searchFilter.value.toLowerCase();
+            
+            let visibleCount = 0;
             
             exerciseCards.forEach(card => {
                 const cardMuscleGroup = card.dataset.muscleGroup.toLowerCase();
@@ -388,7 +403,7 @@
                     visible = false;
                 }
                 
-                if (equipment && cardEquipment.indexOf(equipment) === -1) {
+                if (equipment && !cardEquipment.includes(equipment)) {
                     visible = false;
                 }
                 
@@ -401,13 +416,18 @@
                 }
                 
                 card.style.display = visible ? 'block' : 'none';
+                
+                if (visible) {
+                    visibleCount++;
+                }
             });
             
+            displayedCount.textContent = visibleCount;
+            
             // Check if any exercises are visible
-            const visibleExercises = document.querySelectorAll('.exercise-card[style="display: block"]');
             const emptyState = document.querySelector('.empty-state');
             
-            if (visibleExercises.length === 0 && emptyState) {
+            if (visibleCount === 0 && emptyState) {
                 emptyState.style.display = 'block';
             } else if (emptyState) {
                 emptyState.style.display = 'none';
@@ -532,7 +552,24 @@
         document.getElementById('detail-add-to-workout').addEventListener('click', function() {
             const exerciseId = this.dataset.exerciseId;
             exerciseIdInput.value = exerciseId;
-            addToWorkoutForm.action = `/workout/${exerciseId}/add`;
+            
+            // Use the correct form action URL format
+            const workoutSelect = document.getElementById('workout-select');
+            addToWorkoutForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const selectedValue = workoutSelect.value;
+                
+                if (selectedValue === 'new') {
+                    // Create a new workout
+                    addToWorkoutForm.action = "/workout/new";
+                    addToWorkoutForm.submit();
+                } else {
+                    // Add to existing workout
+                    addToWorkoutForm.action = `/workout/${selectedValue}/add`;
+                    addToWorkoutForm.submit();
+                }
+            });
+            
             detailsModal.style.display = 'none';
             exerciseModal.style.display = 'block';
             
