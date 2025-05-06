@@ -17,42 +17,54 @@ def index():
 def dashboard():
     """User's dashboard with workout history displayed as a commit-style heatmap."""
     # Get all workouts ordered by date
-    workouts = Workout.query.filter_by(user_id=current_user.id).order_by(Workout.date.desc()).all()
-    
-    # Calculate workouts this month
-    now = datetime.now()
-    current_month_workouts = [w for w in workouts if w.date.month == now.month and w.date.year == now.year]
-    
-    # Calculate current streak
-    streak = 0
-    if workouts:
-        # Start from yesterday to check for streak
-        check_date = now.date() - timedelta(days=1)
-        for i in range(30):  # Check up to 30 days back
-            day_workouts = [w for w in workouts if w.date.date() == check_date and w.completed]
-            if day_workouts:
-                streak += 1
-                check_date -= timedelta(days=1)
-            else:
-                break
-    
-    # Find favorite exercise
-    exercise_counts = {}
-    for workout in workouts:
-        for exercise in workout.exercises:
-            exercise_name = exercise.exercise.name
-            if exercise_name in exercise_counts:
-                exercise_counts[exercise_name] += 1
-            else:
-                exercise_counts[exercise_name] = 1
-    
-    favorite_exercise = "None yet"
-    if exercise_counts:
-        favorite_exercise = max(exercise_counts, key=exercise_counts.get)
-    
-    return render_template('dashboard.html', 
-                          workouts=workouts,
-                          current_month_workouts=current_month_workouts,
-                          streak=streak,
-                          favorite_exercise=favorite_exercise,
-                          now=now)
+    try:
+        workouts = Workout.query.filter_by(user_id=current_user.id).order_by(Workout.date.desc()).all()
+        
+        # Calculate workouts this month
+        now = datetime.now()
+        current_month_workouts = [w for w in workouts if w.date.month == now.month and w.date.year == now.year]
+        
+        # Calculate current streak
+        streak = 0
+        if workouts:
+            # Start from yesterday to check for streak
+            check_date = now.date() - timedelta(days=1)
+            for i in range(30):  # Check up to 30 days back
+                day_workouts = [w for w in workouts if w.date.date() == check_date and w.completed]
+                if day_workouts:
+                    streak += 1
+                    check_date -= timedelta(days=1)
+                else:
+                    break
+        
+        # Find favorite exercise
+        exercise_counts = {}
+        for workout in workouts:
+            for exercise in workout.exercises:
+                if exercise.exercise:  # Ensure exercise exists
+                    exercise_name = exercise.exercise.name
+                    if exercise_name in exercise_counts:
+                        exercise_counts[exercise_name] += 1
+                    else:
+                        exercise_counts[exercise_name] = 1
+        
+        favorite_exercise = "None yet"
+        if exercise_counts:
+            favorite_exercise = max(exercise_counts, key=exercise_counts.get)
+        
+        return render_template('dashboard.html', 
+                              workouts=workouts,
+                              current_month_workouts=current_month_workouts,
+                              streak=streak,
+                              favorite_exercise=favorite_exercise,
+                              now=now)
+    except Exception as e:
+        # Log the error (in a real app you would use a proper logger)
+        print(f"Error in dashboard route: {str(e)}")
+        # Return a simpler version of the dashboard with no data
+        return render_template('dashboard.html', 
+                             workouts=[],
+                             current_month_workouts=[],
+                             streak=0,
+                             favorite_exercise="None yet",
+                             now=datetime.now())

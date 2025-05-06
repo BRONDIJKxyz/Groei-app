@@ -136,9 +136,7 @@
 <div class="card">
     <h2 class="card-title mb-4">Your Workout Activity</h2>
     <div class="calendar-wrapper">
-        <div class="calendar-heatmap" id="workout-heatmap">
-            <!-- Calendar will be populated by JavaScript -->
-        </div>
+        <div class="calendar-heatmap" id="workout-heatmap" data-workout-dates='{% if workouts %}[{% for workout in workouts %}"{{ workout.date.isoformat() }}"{% if not loop.last %},{% endif %}{% endfor %}]{% else %}[]{% endif %}'></div>
         <div class="calendar-legend">
             <div class="calendar-legend-item">
                 <div class="calendar-legend-color heat-level-0"></div>
@@ -210,13 +208,10 @@
     // Generate GitHub-style workout heatmap
     document.addEventListener('DOMContentLoaded', function() {
         const heatmapEl = document.getElementById('workout-heatmap');
+        if (!heatmapEl) return; // Exit if element doesn't exist
         
-        // Pre-render workout dates from server as JSON
-        const workoutDates = [
-            {% for workout in workouts %}
-                "{{ workout.date.isoformat() }}"{% if not loop.last %},{% endif %}
-            {% endfor %}
-        ];
+        // Get workout dates from data attribute
+        const workoutData = heatmapEl.getAttribute('data-workout-dates');
         
         // Create a year of calendar days
         const today = new Date();
@@ -245,7 +240,7 @@
             
             // Count workouts on this day to determine intensity
             let workoutsOnDay = 0;
-            workoutDates.forEach(w => {
+            JSON.parse(workoutData).forEach(w => {
                 const workoutDate = new Date(w);
                 if (workoutDate.toISOString().split('T')[0] === dateStr) {
                     workoutsOnDay++;
