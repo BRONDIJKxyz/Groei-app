@@ -125,20 +125,28 @@
             </div>
             <div class="modal-body">
                 <p>Select a workout to add this exercise to:</p>
-                <form id="add-to-workout-form" method="POST" action="/workout/add-exercise">
+                <!-- Form for new workout -->
+                <form id="new-workout-form" method="POST" action="/workout/new" style="display:none;">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <input type="hidden" id="exercise-id-input" name="exercise_id">
-                    <div class="form-group">
-                        <select id="workout-select" name="workout_id" class="form-select">
-                            <option value="new">Start a new workout</option>
-                            <!-- Active workouts will be populated via JavaScript -->
-                        </select>
-                    </div>
-                    <div class="modal-actions">
-                        <button type="button" class="btn btn-outline modal-close-btn">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Add Exercise</button>
-                    </div>
+                    <input type="hidden" id="exercise-id-input-new" name="exercise_id">
                 </form>
+                
+                <!-- Form for existing workout -->
+                <form id="existing-workout-form" method="POST" action="" style="display:none;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" id="exercise-id-input-existing" name="exercise_id">
+                </form>
+                
+                <div class="form-group">
+                    <select id="workout-select" name="workout_id" class="form-select">
+                        <option value="new">Start a new workout</option>
+                        <!-- Active workouts will be populated via JavaScript -->
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-outline modal-close-btn">Cancel</button>
+                    <button type="button" id="add-to-workout-submit" class="btn btn-primary">Add Exercise</button>
+                </div>
             </div>
         </div>
     </div>
@@ -446,15 +454,19 @@
         const addToWorkoutBtns = document.querySelectorAll('.add-to-workout-btn');
         const viewDetailsBtns = document.querySelectorAll('.view-details-btn');
         const closeBtns = document.querySelectorAll('.modal-close, .modal-close-btn');
-        const exerciseIdInput = document.getElementById('exercise-id-input');
-        const addToWorkoutForm = document.getElementById('add-to-workout-form');
+        const exerciseIdInputNew = document.getElementById('exercise-id-input-new');
+        const exerciseIdInputExisting = document.getElementById('exercise-id-input-existing');
+        const newWorkoutForm = document.getElementById('new-workout-form');
+        const existingWorkoutForm = document.getElementById('existing-workout-form');
+        const workoutSelect = document.getElementById('workout-select');
+        const addToWorkoutSubmit = document.getElementById('add-to-workout-submit');
         
         // Open "Add to Workout" modal
         addToWorkoutBtns.forEach(btn => {
             btn.addEventListener('click', function() {
                 const exerciseId = this.dataset.exerciseId;
-                exerciseIdInput.value = exerciseId;
-                addToWorkoutForm.action = `/workout/${exerciseId}/add`;
+                exerciseIdInputNew.value = exerciseId;
+                exerciseIdInputExisting.value = exerciseId;
                 exerciseModal.style.display = 'block';
                 
                 // Fetch active workouts for the dropdown
@@ -494,8 +506,6 @@
             fetch('/workout/api/active-workouts')
                 .then(response => response.json())
                 .then(data => {
-                    const workoutSelect = document.getElementById('workout-select');
-                    
                     // Clear existing options except the first one
                     while (workoutSelect.options.length > 1) {
                         workoutSelect.remove(1);
@@ -551,33 +561,41 @@
         // Add to workout from details modal
         document.getElementById('detail-add-to-workout').addEventListener('click', function() {
             const exerciseId = this.dataset.exerciseId;
-            exerciseIdInput.value = exerciseId;
+            exerciseIdInputNew.value = exerciseId;
+            exerciseIdInputExisting.value = exerciseId;
             
             // Clear any previous event listeners by cloning and replacing
-            const oldForm = addToWorkoutForm;
+            const oldForm = newWorkoutForm;
             const newForm = oldForm.cloneNode(true);
             oldForm.parentNode.replaceChild(newForm, oldForm);
             
+            const oldExistingForm = existingWorkoutForm;
+            const newExistingForm = oldExistingForm.cloneNode(true);
+            oldExistingForm.parentNode.replaceChild(newExistingForm, oldExistingForm);
+            
             // Get the new form reference
-            const formElement = document.getElementById('add-to-workout-form');
-            const workoutSelect = document.getElementById('workout-select');
+            const formElement = document.getElementById('new-workout-form');
+            const existingFormElement = document.getElementById('existing-workout-form');
+            const workoutSelectElement = document.getElementById('workout-select');
             
             // Set up a single event listener
-            formElement.onsubmit = function(e) {
+            addToWorkoutSubmit.addEventListener('click', function(e) {
                 e.preventDefault();
-                const selectedValue = workoutSelect.value;
+                const selectedValue = workoutSelectElement.value;
                 
                 if (selectedValue === 'new') {
                     // Create a new workout
-                    formElement.action = "/workout/new";
+                    formElement.style.display = 'block';
+                    existingFormElement.style.display = 'none';
+                    formElement.submit();
                 } else {
                     // Add to existing workout
-                    formElement.action = `/workout/${selectedValue}/add`;
+                    existingFormElement.style.display = 'block';
+                    formElement.style.display = 'none';
+                    existingFormElement.action = `/workout/${selectedValue}/add`;
+                    existingFormElement.submit();
                 }
-                
-                // Submit the form
-                this.submit();
-            };
+            });
             
             detailsModal.style.display = 'none';
             exerciseModal.style.display = 'block';

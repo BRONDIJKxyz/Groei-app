@@ -12,16 +12,20 @@ def exercise_list():
     """List all exercises, filterable by muscle group."""
     muscle_group = request.args.get('muscle_group', None)
     
+    # Get all exercises first
+    all_exercises = Exercise.query.all()
+    
+    # Apply muscle group filter only if specified
     if muscle_group:
-        exercises = Exercise.query.filter_by(muscle_group=muscle_group).all()
+        exercises = [ex for ex in all_exercises if ex.muscle_group.lower() == muscle_group.lower()]
     else:
-        exercises = Exercise.query.all()
+        exercises = all_exercises
     
     # For debugging
-    total_count = Exercise.query.count()
+    total_count = len(all_exercises)
     muscle_group_counts = {}
     for group in ['chest', 'back', 'shoulders', 'arms', 'legs', 'core', 'cardio']:
-        muscle_group_counts[group] = Exercise.query.filter_by(muscle_group=group).count()
+        muscle_group_counts[group] = len([ex for ex in all_exercises if ex.muscle_group.lower() == group.lower()])
     
     print(f"Total exercises in database: {total_count}")
     print(f"Exercises being sent to template: {len(exercises)}")
