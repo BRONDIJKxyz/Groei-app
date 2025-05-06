@@ -172,6 +172,78 @@ def add_set(workout_id, exercise_id):
     
     return redirect(url_for('workout.session', workout_id=workout_id))
 
+@workout_bp.route('/add-exercise', methods=['POST'])
+@login_required
+def add_exercise_to_workout():
+    """Handle exercise addition from the exercise list page."""
+    try:
+        # Extract form data
+        exercise_id = request.form.get('exercise_id')
+        workout_option = request.form.get('workout_option')
+        
+        if not exercise_id:
+            flash('No exercise selected', 'error')
+            return redirect(url_for('workout.exercise_list'))
+        
+        # Get the exercise
+        exercise = Exercise.query.get_or_404(exercise_id)
+        
+        if workout_option == 'new':
+            # Create a new workout
+            workout = Workout(
+                user_id=current_user.id,
+                date=datetime.now(),
+                name=f"Workout on {datetime.now().strftime('%B %d, %Y')}"
+            )
+            db.session.add(workout)
+            db.session.flush()  # Get the ID without committing
+            
+            # Add the exercise to the new workout
+            workout_exercise = WorkoutExercise(
+                workout_id=workout.id,
+                exercise_id=exercise_id
+            )
+            db.session.add(workout_exercise)
+            db.session.commit()
+            
+            flash(f'Created a new workout with {exercise.name}', 'success')
+            return redirect(url_for('workout.session', workout_id=workout.id))
+        else:
+            # Add to existing workout
+            workout_id = int(workout_option)
+            
+            # Verify workout belongs to user
+            workout = Workout.query.get_or_404(workout_id)
+            if workout.user_id != current_user.id:
+                flash('Access denied', 'error')
+                return redirect(url_for('workout.exercise_list'))
+                
+            # Check if exercise is already in workout
+            existing = WorkoutExercise.query.filter_by(
+                workout_id=workout_id, 
+                exercise_id=exercise_id
+            ).first()
+            
+            if existing:
+                flash(f'{exercise.name} is already in this workout', 'info')
+            else:
+                # Add the exercise to the workout
+                workout_exercise = WorkoutExercise(
+                    workout_id=workout_id,
+                    exercise_id=exercise_id
+                )
+                db.session.add(workout_exercise)
+                db.session.commit()
+                flash(f'Added {exercise.name} to your workout', 'success')
+                
+            return redirect(url_for('workout.session', workout_id=workout_id))
+            
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error adding exercise: {str(e)}")
+        flash('An error occurred while adding the exercise', 'error')
+        return redirect(url_for('workout.exercise_list'))
+
 # API Routes for AJAX functionality
 @workout_bp.route('/api/exercises')
 @login_required
