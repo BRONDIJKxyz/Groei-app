@@ -553,22 +553,31 @@
             const exerciseId = this.dataset.exerciseId;
             exerciseIdInput.value = exerciseId;
             
-            // Use the correct form action URL format
+            // Clear any previous event listeners by cloning and replacing
+            const oldForm = addToWorkoutForm;
+            const newForm = oldForm.cloneNode(true);
+            oldForm.parentNode.replaceChild(newForm, oldForm);
+            
+            // Get the new form reference
+            const formElement = document.getElementById('add-to-workout-form');
             const workoutSelect = document.getElementById('workout-select');
-            addToWorkoutForm.addEventListener('submit', function(e) {
+            
+            // Set up a single event listener
+            formElement.onsubmit = function(e) {
                 e.preventDefault();
                 const selectedValue = workoutSelect.value;
                 
                 if (selectedValue === 'new') {
                     // Create a new workout
-                    addToWorkoutForm.action = "/workout/new";
-                    addToWorkoutForm.submit();
+                    formElement.action = "/workout/new";
                 } else {
                     // Add to existing workout
-                    addToWorkoutForm.action = `/workout/${selectedValue}/add`;
-                    addToWorkoutForm.submit();
+                    formElement.action = `/workout/${selectedValue}/add`;
                 }
-            });
+                
+                // Submit the form
+                this.submit();
+            };
             
             detailsModal.style.display = 'none';
             exerciseModal.style.display = 'block';
