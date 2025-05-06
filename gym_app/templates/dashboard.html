@@ -120,15 +120,15 @@
     </div>
     <div class="stat-card">
         <div class="stat-title">This Month</div>
-        <div class="stat-value">{{ workouts|selectattr('date', 'month_is_current')|list|length }}</div>
+        <div class="stat-value">{{ current_month_workouts|length }}</div>
     </div>
     <div class="stat-card">
         <div class="stat-title">Current Streak</div>
-        <div class="stat-value">5 days</div>
+        <div class="stat-value">{{ streak }} day{% if streak != 1 %}s{% endif %}</div>
     </div>
     <div class="stat-card">
         <div class="stat-title">Favorite Exercise</div>
-        <div class="stat-value">Bench Press</div>
+        <div class="stat-value">{{ favorite_exercise }}</div>
     </div>
 </div>
 
@@ -210,7 +210,9 @@
     // Generate GitHub-style workout heatmap
     document.addEventListener('DOMContentLoaded', function() {
         const heatmapEl = document.getElementById('workout-heatmap');
-        const workouts = {{ workouts|map(attribute='date')|map('tojson')|list|tojson }};
+        
+        // Pre-render workout dates from server as JSON
+        const workoutDates = JSON.parse('{{ workouts|map(attribute="date.isoformat")|list|tojson|safe }}');
         
         // Create a year of calendar days
         const today = new Date();
@@ -239,7 +241,7 @@
             
             // Count workouts on this day to determine intensity
             let workoutsOnDay = 0;
-            workouts.forEach(w => {
+            workoutDates.forEach(w => {
                 const workoutDate = new Date(w);
                 if (workoutDate.toISOString().split('T')[0] === dateStr) {
                     workoutsOnDay++;
