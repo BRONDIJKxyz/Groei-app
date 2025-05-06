@@ -36,6 +36,10 @@ def create_app():
     csrf.init_app(app)
     login_manager.login_view = 'auth.login'
     
+    # Debug CSRF issues
+    app.config['WTF_CSRF_CHECK_DEFAULT'] = False  # Disable CSRF by default
+    app.config['WTF_CSRF_TIME_LIMIT'] = None  # No time limit for tokens
+    
     # Add context processor to make 'now' available in all templates
     @app.context_processor
     def inject_now():
