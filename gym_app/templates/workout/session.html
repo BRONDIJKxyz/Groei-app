@@ -89,7 +89,7 @@
                                         <div class="set-number">Set {{ loop.index }}</div>
                                         <div class="set-details">
                                             <div class="set-weight">
-                                                <span class="set-weight-value">{{ set.weight }}</span>
+                                                <span class="set-weight-value">{{ set.weight|round|int }}</span>
                                                 <span class="set-label">kg</span>
                                             </div>
                                             <div class="set-reps">
@@ -107,7 +107,7 @@
                         <div class="exercise-tracking-actions">
                             <!-- Total weight summary -->
                             <div class="total-weight mb-3">
-                                Total: <span class="total-weight-value">{{ workout_exercise.total_weight }}</span> kg
+                                Total: <span class="total-weight-value">{{ workout_exercise.total_weight|round|int }}</span> kg
                             </div>
                             
                             <div class="action-buttons mb-3">
