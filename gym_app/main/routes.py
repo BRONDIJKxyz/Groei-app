@@ -29,6 +29,9 @@ def dashboard():
         monthly_workouts = 0
         last_workout_date = None
         
+        # Get current date for streak calculation
+        today = datetime.now().date()
+        
         # Enhanced workout data with total weight information
         workout_data = []
         
@@ -73,16 +76,27 @@ def dashboard():
             if workout.date >= start_of_month:
                 monthly_workouts += 1
             
-            # Calculate streak (consecutive days with workouts)
+            # Only consider streak for the first workout we encounter for each day
             workout_day = workout.date.date()
+            
+            # Initialize streak on first workout
             if last_workout_date is None:
-                streak = 1
-                last_workout_date = workout_day
-            elif (last_workout_date - workout_day).days == 1:
+                # Start streak if the workout is today or yesterday
+                if (today - workout_day).days <= 1:
+                    streak = 1
+                    last_workout_date = workout_day
+            # Continue streak if this workout is one day before the last one we counted
+            elif last_workout_date is not None and (last_workout_date - workout_day).days == 1:
                 streak += 1
                 last_workout_date = workout_day
-            elif (last_workout_date - workout_day).days > 1:
+            # Break streak if gap is larger than 1 day
+            elif last_workout_date is not None and (last_workout_date - workout_day).days > 1:
+                # We've found a break in the streak, no need to check further
                 break
+            # Skip if we already counted this day (multiple workouts on same day)
+            elif last_workout_date is not None and (last_workout_date - workout_day).days == 0:
+                # Same day, already counted
+                pass
         
         # Get favorite exercise (based on frequency)
         exercise_counts = {}
@@ -95,7 +109,13 @@ def dashboard():
                     else:
                         exercise_counts[exercise.name] = 1
         
-        favorite_exercise = max(exercise_counts.items(), key=lambda x: x[1])[0] if exercise_counts else "None"
+        # Only consider an exercise a favorite if it has been done multiple times
+        favorite_exercise = "None"
+        if exercise_counts:
+            max_exercise = max(exercise_counts.items(), key=lambda x: x[1])
+            # Only set as favorite if done more than once
+            if max_exercise[1] > 1:
+                favorite_exercise = max_exercise[0]
         
         return render_template('dashboard.html', 
                                workouts=workouts,
