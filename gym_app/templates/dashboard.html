@@ -151,28 +151,44 @@
         const currentYear = today.getFullYear();
         const startOfYear = new Date(currentYear, 0, 1); // January 1st of current year
         
+        // Year starts on January 1st, which might be any day of the week
+        
         // Add month labels (properly positioned)
         const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
         const monthLabelContainer = document.createElement('div');
         monthLabelContainer.className = 'month-labels';
         
-        // Create the month labels based on calculated positions
+        // Calculate the exact week for each month to ensure proper alignment
         for (let i = 0; i < 12; i++) {
+            // First day of each month
             const monthStart = new Date(currentYear, i, 1);
             
-            // Get the day of week for this month (0 = Sunday)
-            const firstDayOfMonth = monthStart.getDay();
+            // Days from January 1st to the first day of this month
+            const millisecondsPerDay = 1000 * 60 * 60 * 24;
+            const daysSinceYearStart = Math.floor((monthStart - startOfYear) / millisecondsPerDay);
             
-            // Calculate days since start of year
-            const daysSinceStart = Math.floor((monthStart - startOfYear) / (1000 * 60 * 60 * 24));
+            // Exact week offset - this accounts for partial weeks properly
+            let weekOffset;
             
-            // Calculate the week column more precisely
-            const weekOffset = Math.floor(daysSinceStart / 7);
+            // For January, always position at the first column
+            if (i === 0) {
+                weekOffset = 0;
+            } else {
+                // Adjust for day of week when calculating weekOffset
+                const startDayOfWeek = startOfYear.getDay(); // 0=Sun, 1=Mon, etc.
+                const monthDayOfWeek = monthStart.getDay();
+                
+                // Calculate exact week, accounting for days of week
+                weekOffset = Math.floor((daysSinceYearStart + (startDayOfWeek === 0 ? 6 : startDayOfWeek - 1)) / 7);
+            }
             
             const monthLabel = document.createElement('div');
             monthLabel.className = 'month-label';
             monthLabel.textContent = months[i];
             monthLabel.style.gridColumn = weekOffset + 1; // 1-based for CSS grid
+            
+            // Ensure proper column alignment for each month
+            
             monthLabelContainer.appendChild(monthLabel);
         }
         
@@ -196,14 +212,12 @@
         const heatmapGrid = heatmapEl.closest('.heatmap-grid');
         heatmapGrid.insertBefore(weekdayLabelContainer, heatmapEl);
         
-        // Get the first Monday of the year or the first day of the year
+        // Always start with January 1st, regardless of day of week
+        // This ensures the calendar aligns with the month headers
         const firstDay = new Date(startOfYear);
-        // If January 1 is not Monday (1), adjust to previous Monday
-        const dayOfWeek = firstDay.getDay(); // 0 = Sunday, 1 = Monday, etc.
-        if (dayOfWeek !== 1) { // If not Monday
-            const daysToSubtract = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-            firstDay.setDate(firstDay.getDate() - daysToSubtract);
-        }
+        
+        // Get day of week for January 1st (0=Sun, 1=Mon, etc.)
+        // We'll use this to correctly align the calendar days
         
         // Calculate number of days to display (enough weeks to reach December)
         const weeksToShow = 53; // Maximum weeks in a year plus buffer
@@ -220,13 +234,20 @@
             // Skip if we're beyond today or in the next year
             if (cellDate > today || !isCurrentYear) continue;
             
-            // Map day 0-6 (Monday-Sunday)
-            // In our grid: Monday=0, Sunday=6
-            let row = (cellDate.getDay() + 6) % 7; // Convert Sunday=0 to Sunday=6
+            // Calculate the day of week (0=Sun, 1=Mon, etc.)
+            const cellDayOfWeek = cellDate.getDay(); 
             
-            // Calculate week column
-            const weekNumber = getWeekNumber(cellDate) - getWeekNumber(firstDay);
-            const col = weekNumber;
+            // Convert to our grid: Monday=0, Sunday=6
+            let row = cellDayOfWeek === 0 ? 6 : cellDayOfWeek - 1;
+            
+            // Calculate days since Jan 1
+            const daysSince = Math.floor((cellDate - startOfYear) / (1000 * 60 * 60 * 24));
+            
+            // Calculate the column based on the day of year
+            // January 1st should be in column 0, adjusted by day of week
+            // For 2025, Jan 1 is Wednesday, so it should be in column 2 of the first week
+            const firstDayCol = startOfYear.getDay() === 0 ? 6 : startOfYear.getDay() - 1;
+            const col = Math.floor((daysSince + firstDayCol) / 7);
             
             // Format date as ISO string for lookup (YYYY-MM-DD)
             const dateStr = cellDate.toISOString().split('T')[0];
