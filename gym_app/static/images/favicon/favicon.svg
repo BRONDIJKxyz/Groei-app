@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Dumbbell Icon for Groei App -->
+  <rect width="512" height="512" fill="#4F46E5" rx="100" />
+  
+  <!-- Dumbbell -->
+  <g fill="#FFFFFF" transform="translate(60, 180) scale(0.77)">
+    <!-- Left Weight -->
+    <rect x="10" y="30" width="60" height="120" rx="10" />
+    
+    <!-- Right Weight -->
+    <rect x="430" y="30" width="60" height="120" rx="10" />
+    
+    <!-- Bar -->
+    <rect x="70" y="75" width="360" height="30" rx="5" />
+    
+    <!-- Small Connectors -->
+    <rect x="70" y="65" width="15" height="50" rx="3" />
+    <rect x="415" y="65" width="15" height="50" rx="3" />
+  </g>
+  
+  <!-- Letter G -->
+  <path d="M256 55 C190 55, 150 110, 150 160 C150 210, 190 265, 256 265 C290 265, 320 245, 335 220 L280 220 L280 170 L385 170 L385 195 C385 195, 360 315, 255 315 C150 315, 100 235, 100 160 C100 85, 150 5, 255 5 C360 5, 385 110, 385 110 L335 110 C335 110, 320 55, 256 55" fill="#FFFFFF" />
+</svg>
