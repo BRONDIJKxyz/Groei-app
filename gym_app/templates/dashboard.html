@@ -146,6 +146,10 @@
             dateWeightMap[workoutDates[i]] = workoutWeights[i];
         }
         
+        // Debug logging for workout dates (remove in production)
+        console.log('Workout dates available:', workoutDates);
+        console.log('Workout weights available:', workoutWeights);
+        
         // Create the current year calendar starting from January 1st
         const today = new Date();
         const currentYear = today.getFullYear();
@@ -230,6 +234,7 @@
             const isCurrentYear = cellDate.getFullYear() === currentYear;
             
             // Skip if we're beyond today or in the next year
+            // But still generate empty blocks for past dates with no workouts
             if (cellDate > today || !isCurrentYear) continue;
             
             // THIS IS THE GITHUB APPROACH:
@@ -263,6 +268,9 @@
             let intensity = 0;
             let weight = 0;
             
+            // We no longer need special cases since all days will have visible blocks
+            // Just keeping this for reference
+            
             if (dateStr in dateWeightMap) {
                 weight = dateWeightMap[dateStr];
                 // Set intensity level based on weight with higher threshold (up to 10000kg)
@@ -271,6 +279,7 @@
                 else if (weight > 3000 && weight <= 10000) intensity = 3;
                 else if (weight > 10000) intensity = 4;
             }
+            // No special cases needed anymore - all days will have blocks
             
             // Create day element
             const dayEl = document.createElement('div');
@@ -495,37 +504,45 @@
         text-align: left;
     }
     
-    .calendar-day {
+    /* Heatmap */
+    .calendar-heatmap {
+        display: grid;
+        grid-template-columns: repeat(53, 1fr);
+        grid-gap: 3px;
+        margin-top: 1rem;
+    }
+    
+    .day {
         width: 12px;
         height: 12px;
         border-radius: 2px;
-        transition: transform 0.05s ease-out;
+        border: 1px solid rgba(27, 31, 35, 0.06); /* Add border to all days */
+        transition: transform 0.1s ease-in-out, opacity 0.1s ease-in-out;
     }
     
-    .calendar-day:hover {
+    .day:hover {
         transform: scale(1.3);
-        z-index: 10;
-        transition: transform 0.03s ease-out;
+        opacity: 0.8;
     }
     
     .heat-level-0 {
-        background-color: #ebedf0;
+        background-color: #ebedf0; /* Light gray for no workout */
     }
     
     .heat-level-1 {
-        background-color: #9be9a8;
+        background-color: #9be9a8; /* Light green */
     }
     
     .heat-level-2 {
-        background-color: #40c463;
+        background-color: #40c463; /* Medium green */
     }
     
     .heat-level-3 {
-        background-color: #30a14e;
+        background-color: #30a14e; /* Dark green */
     }
     
     .heat-level-4 {
-        background-color: #216e39;
+        background-color: #216e39; /* Darkest green */
     }
     
     /* Recent Workouts */
