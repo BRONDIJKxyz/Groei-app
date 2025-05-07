@@ -232,30 +232,29 @@
             // Skip if we're beyond today or in the next year
             if (cellDate > today || !isCurrentYear) continue;
             
-            // For 2025 display, force January 1st to show as Monday
-            // regardless of actual day (2025-01-01 is Wednesday)
-            const dateMonth = cellDate.getMonth(); // 0-11 for Jan-Dec
-            const dateDay = cellDate.getDate();    // 1-31 for day of month
+            // Get the actual day of week for this date (0=Sun, 1=Mon, etc.)
+            const cellDayOfWeek = cellDate.getDay();
             
-            // Calculate the proper row (day of week)
-            // 2025-01-01 should be in Monday row (0)
-            let row;
+            // Convert to our grid row: Monday=0, Sunday=6
+            // This ensures each day appears in the correct day-of-week row
+            let row = cellDayOfWeek === 0 ? 6 : cellDayOfWeek - 1;
             
-            // Days since start of year (Jan 1)
+            // Calculate days since start of year
             const daysSince = Math.floor((cellDate - startOfYear) / (1000 * 60 * 60 * 24));
             
-            // For 2025: Force January 1st into Monday position (row 0)
-            // This is a special fixed mapping for 2025 display only
-            // The approach sacrifices actual date accuracy for predictable visual display
-            // where Jan 1st is expected to be in the Monday position
+            // The start offset is when Jan 1st should appear in the grid
+            // Jan 1, 2025 is Wednesday, so its day of week index is 3 (0-indexed) or 2 for our grid (0=Mon)
+            const jan1DayOfWeek = startOfYear.getDay(); // 0-6 (Sun-Sat)
+            const jan1GridRow = jan1DayOfWeek === 0 ? 6 : jan1DayOfWeek - 1; // 0-6 (Mon-Sun)
             
-            // Simple algorithm: day position in week = (days since Jan 1) % 7
-            // Offset by 0 since we want Jan 1 (day 0) to start at row 0 (Monday)
-            row = daysSince % 7;
+            // Calculate the week column where this date belongs
+            // We need to find how many full weeks have passed plus partial weeks at the beginning
+            const col = Math.floor((daysSince + jan1GridRow) / 7);
             
-            // Column calculation - integer division of days by 7
-            // Each column is exactly one week (7 days)
-            const col = Math.floor(daysSince / 7);
+            // This ensures:
+            // 1. Each date appears in the correct day-of-week row
+            // 2. The weeks progress correctly across the columns
+            // 3. Month variations in length are properly represented
             
             // Format date as ISO string for lookup (YYYY-MM-DD)
             const dateStr = cellDate.toISOString().split('T')[0];
