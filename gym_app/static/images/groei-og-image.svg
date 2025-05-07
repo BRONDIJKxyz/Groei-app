@@ -1,0 +1,154 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <!-- Background gradient -->
+  <defs>
+    <linearGradient id="bg-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4F46E5" />
+      <stop offset="100%" stop-color="#3B82F6" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg-gradient)" />
+  
+  <!-- White content panel -->
+  <rect x="150" y="115" width="900" height="400" rx="20" fill="#FFFFFF" />
+  
+  <!-- Groei Logo and Title -->
+  <g transform="translate(250, 215)">
+    <!-- Dumbbell Icon -->
+    <g fill="#4F46E5" transform="translate(0, 0) scale(0.6)">
+      <!-- Left Weight -->
+      <rect x="10" y="30" width="60" height="120" rx="10" />
+      
+      <!-- Right Weight -->
+      <rect x="430" y="30" width="60" height="120" rx="10" />
+      
+      <!-- Bar -->
+      <rect x="70" y="75" width="360" height="30" rx="5" />
+      
+      <!-- Small Connectors -->
+      <rect x="70" y="65" width="15" height="50" rx="3" />
+      <rect x="415" y="65" width="15" height="50" rx="3" />
+    </g>
+    
+    <!-- App Name -->
+    <text x="320" y="50" font-family="Arial, sans-serif" font-weight="bold" font-size="80" fill="#1F2937">GROEI</text>
+    <text x="320" y="100" font-family="Arial, sans-serif" font-size="36" fill="#6B7280">Workout Tracker</text>
+  </g>
+  
+  <!-- Features -->
+  <g transform="translate(250, 350)">
+    <g transform="translate(0, 0)">
+      <circle cx="15" cy="15" r="15" fill="#4F46E5" opacity="0.8" />
+      <text x="45" y="22" font-family="Arial, sans-serif" font-size="24" fill="#4B5563">Track Workouts</text>
+    </g>
+    
+    <g transform="translate(250, 0)">
+      <circle cx="15" cy="15" r="15" fill="#4F46E5" opacity="0.8" />
+      <text x="45" y="22" font-family="Arial, sans-serif" font-size="24" fill="#4B5563">Monitor Progress</text>
+    </g>
+    
+    <g transform="translate(500, 0)">
+      <circle cx="15" cy="15" r="15" fill="#4F46E5" opacity="0.8" />
+      <text x="45" y="22" font-family="Arial, sans-serif" font-size="24" fill="#4B5563">Grow Stronger</text>
+    </g>
+  </g>
+  
+  <!-- Heatmap Visualization (Simplified) -->
+  <g transform="translate(250, 420)">
+    <text x="0" y="0" font-family="Arial, sans-serif" font-size="20" fill="#6B7280">Activity Calendar</text>
+    <g transform="translate(0, 15)">
+      <!-- Days of Week -->
+      <text x="-30" y="20" font-family="Arial, sans-serif" font-size="12" fill="#9CA3AF">Mon</text>
+      <text x="-30" y="40" font-family="Arial, sans-serif" font-size="12" fill="#9CA3AF">Wed</text>
+      <text x="-30" y="60" font-family="Arial, sans-serif" font-size="12" fill="#9CA3AF">Fri</text>
+      
+      <!-- Months -->
+      <text x="20" y="-10" font-family="Arial, sans-serif" font-size="12" fill="#9CA3AF">Jan</text>
+      <text x="120" y="-10" font-family="Arial, sans-serif" font-size="12" fill="#9CA3AF">Mar</text>
+      <text x="220" y="-10" font-family="Arial, sans-serif" font-size="12" fill="#9CA3AF">May</text>
+      <text x="320" y="-10" font-family="Arial, sans-serif" font-size="12" fill="#9CA3AF">Jul</text>
+      <text x="420" y="-10" font-family="Arial, sans-serif" font-size="12" fill="#9CA3AF">Sep</text>
+      <text x="520" y="-10" font-family="Arial, sans-serif" font-size="12" fill="#9CA3AF">Nov</text>
+      
+      <!-- Heatmap grid -->
+      <g>
+        <!-- Generate grid programmatically -->
+        <script type="text/javascript">
+          <![CDATA[
+          function generateHeatmap() {
+            const svgNS = "http://www.w3.org/2000/svg";
+            const colors = ["#ebedf0", "#9be9a8", "#40c463", "#30a14e", "#216e39"];
+            const container = document.getElementById("heatmap-grid");
+            
+            // Create a grid of cells
+            for (let row = 0; row < 7; row++) {
+              for (let col = 0; col < 52; col++) {
+                const rect = document.createElementNS(svgNS, "rect");
+                rect.setAttribute("x", col * 12);
+                rect.setAttribute("y", row * 12);
+                rect.setAttribute("width", 10);
+                rect.setAttribute("height", 10);
+                rect.setAttribute("rx", 2);
+                
+                // Random color from the heatmap palette (mostly empty)
+                const random = Math.random();
+                let colorIndex = 0;
+                if (random > 0.8) colorIndex = 1;
+                if (random > 0.9) colorIndex = 2;
+                if (random > 0.95) colorIndex = 3;
+                if (random > 0.98) colorIndex = 4;
+                
+                rect.setAttribute("fill", colors[colorIndex]);
+                container.appendChild(rect);
+              }
+            }
+          }
+          generateHeatmap();
+          ]]>
+        </script>
+        
+        <!-- Fallback static grid -->
+        <!-- Week 1 -->
+        <rect x="0" y="0" width="10" height="10" rx="2" fill="#ebedf0" />
+        <rect x="0" y="12" width="10" height="10" rx="2" fill="#ebedf0" />
+        <rect x="0" y="24" width="10" height="10" rx="2" fill="#ebedf0" />
+        <rect x="0" y="36" width="10" height="10" rx="2" fill="#9be9a8" />
+        <rect x="0" y="48" width="10" height="10" rx="2" fill="#ebedf0" />
+        <rect x="0" y="60" width="10" height="10" rx="2" fill="#ebedf0" />
+        <rect x="0" y="72" width="10" height="10" rx="2" fill="#ebedf0" />
+        
+        <!-- Week 2 -->
+        <rect x="12" y="0" width="10" height="10" rx="2" fill="#ebedf0" />
+        <rect x="12" y="12" width="10" height="10" rx="2" fill="#ebedf0" />
+        <rect x="12" y="24" width="10" height="10" rx="2" fill="#40c463" />
+        <rect x="12" y="36" width="10" height="10" rx="2" fill="#ebedf0" />
+        <rect x="12" y="48" width="10" height="10" rx="2" fill="#ebedf0" />
+        <rect x="12" y="60" width="10" height="10" rx="2" fill="#ebedf0" />
+        <rect x="12" y="72" width="10" height="10" rx="2" fill="#ebedf0" />
+        
+        <!-- And many more weeks... simplified for example -->
+        <!-- Jump to a later month -->
+        <rect x="120" y="0" width="10" height="10" rx="2" fill="#ebedf0" />
+        <rect x="120" y="12" width="10" height="10" rx="2" fill="#40c463" />
+        <rect x="120" y="24" width="10" height="10" rx="2" fill="#ebedf0" />
+        <rect x="120" y="36" width="10" height="10" rx="2" fill="#9be9a8" />
+        <rect x="120" y="48" width="10" height="10" rx="2" fill="#30a14e" />
+        <rect x="120" y="60" width="10" height="10" rx="2" fill="#ebedf0" />
+        <rect x="120" y="72" width="10" height="10" rx="2" fill="#ebedf0" />
+        
+        <!-- Jump to another month -->
+        <rect x="320" y="0" width="10" height="10" rx="2" fill="#ebedf0" />
+        <rect x="320" y="12" width="10" height="10" rx="2" fill="#ebedf0" />
+        <rect x="320" y="24" width="10" height="10" rx="2" fill="#9be9a8" />
+        <rect x="320" y="36" width="10" height="10" rx="2" fill="#ebedf0" />
+        <rect x="320" y="48" width="10" height="10" rx="2" fill="#216e39" />
+        <rect x="320" y="60" width="10" height="10" rx="2" fill="#ebedf0" />
+        <rect x="320" y="72" width="10" height="10" rx="2" fill="#9be9a8" />
+      </g>
+    </g>
+  </g>
+  
+  <!-- Tagline at the bottom -->
+  <text x="600" y="570" font-family="Arial, sans-serif" font-size="24" fill="#FFFFFF" text-anchor="middle">A minimalistic but powerful workout tracker for serious lifters</text>
+</svg>

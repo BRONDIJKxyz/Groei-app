@@ -1,0 +1,11 @@
+Groei App - Your Workout Tracker
+
+Track your workouts, monitor progress, and grow stronger with Groei - a minimalist but powerful workout tracker designed for serious lifters.
+
+Features:
+- Track sets, reps and weight for each exercise
+- Monitor your progress with beautiful visualizations
+- View your workout history in a GitHub-style activity heatmap
+- Organize exercises by muscle groups
+
+Download the app today and start tracking your gains!

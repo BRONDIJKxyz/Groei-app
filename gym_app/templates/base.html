@@ -4,6 +4,30 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Groei App - Your Workout Tracker{% endblock %}</title>
+    
+    <!-- Primary Meta Tags -->
+    <meta name="title" content="Groei App - Your Workout Tracker">
+    <meta name="description" content="Track your workouts, monitor progress, and grow stronger with Groei - a minimalist but powerful workout tracker.">
+    
+    <!-- Open Graph / Facebook / WhatsApp -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ request.url }}">
+    <meta property="og:title" content="Groei App - Your Workout Tracker">
+    <meta property="og:description" content="Track your workouts, monitor progress, and grow stronger with Groei - a minimalist but powerful workout tracker.">
+    <meta property="og:image" content="https://www.pythonanywhere.com/user/BRONDIJKxyz/files/var/media/groei-og-image.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Groei App - A minimalist but powerful workout tracker for serious lifters">
+    <meta property="og:site_name" content="Groei App">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="{{ request.url }}">
+    <meta property="twitter:title" content="Groei App - Your Workout Tracker">
+    <meta property="twitter:description" content="Track your workouts, monitor progress, and grow stronger with Groei - a minimalist but powerful workout tracker.">
+    <meta property="twitter:image" content="https://www.pythonanywhere.com/user/BRONDIJKxyz/files/var/media/groei-og-image.jpg">
+    <meta property="twitter:image:alt" content="Groei App - A minimalist but powerful workout tracker for serious lifters">
+    <meta name="twitter:site" content="@GroeiApp">
     <!-- Favicon -->
     <link rel="icon" href="{{ url_for('static', filename='images/favicon/favicon.ico') }}">
     <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/favicon/apple-touch-icon.png') }}">
