@@ -96,8 +96,94 @@ def create_app():
     @login_required
     def dashboard():
         """User's dashboard with workout history."""
+        from sqlalchemy.orm import joinedload
+        
+        # Get all user workouts with exercises preloaded
         workouts = Workout.query.filter_by(user_id=current_user.id).order_by(Workout.date.desc()).all()
-        return render_template('dashboard.html', workouts=workouts)
+        
+        # Calculate monthly workouts
+        current_month = datetime.now().month
+        current_year = datetime.now().year
+        monthly_workouts = Workout.query.filter(
+            Workout.user_id == current_user.id,
+            Workout.date.between(
+                datetime(current_year, current_month, 1),
+                datetime(current_year, current_month + 1, 1) if current_month < 12 else datetime(current_year + 1, 1, 1)
+            )
+        ).count()
+        
+        # Calculate streak (simplified)
+        streak = 0
+        # Streak logic would go here
+        
+        # Find favorite exercise (most used)
+        favorite_exercise = "None yet"
+        # Favorite exercise logic would go here
+        
+        # Prepare detailed workout data for the calendar view
+        workout_data = []
+        
+        for workout in workouts:
+            # Get all exercises for this workout
+            workout_exercises = WorkoutExercise.query.filter_by(workout_id=workout.id).all()
+            
+            # Calculate total weight for this workout
+            total_weight = 0
+            exercise_details = []
+            
+            # Primary muscle group (most used in this workout)
+            muscle_groups = {}
+            
+            for we in workout_exercises:
+                # Get the exercise info
+                exercise = Exercise.query.get(we.exercise_id)
+                
+                # Count muscle groups
+                if exercise.muscle_group:
+                    muscle_groups[exercise.muscle_group] = muscle_groups.get(exercise.muscle_group, 0) + 1
+                
+                # Calculate weight for this exercise
+                exercise_weight = 0
+                sets = we.sets_data or []
+                
+                for s in sets:
+                    exercise_weight += float(s.get('weight', 0)) * int(s.get('reps', 0))
+                
+                total_weight += exercise_weight
+                
+                # Add exercise details
+                exercise_details.append({
+                    'exercise_id': we.exercise_id,
+                    'exercise_name': exercise.name,
+                    'sets': we.sets_data,
+                    'total_weight': exercise_weight
+                })
+            
+            # Determine primary muscle group
+            primary_muscle_group = max(muscle_groups.items(), key=lambda x: x[1])[0] if muscle_groups else "general"
+            
+            # Format date as ISO string for JavaScript
+            workout_date = workout.date.strftime('%Y-%m-%d')
+            
+            workout_data.append({
+                'date': workout_date,
+                'workout': {
+                    'id': workout.id,
+                    'name': workout.name,
+                    'date': workout.date,
+                    'completed': workout.completed
+                },
+                'total_weight': total_weight,
+                'primary_muscle_group': primary_muscle_group,
+                'workout_exercises': exercise_details
+            })
+        
+        return render_template('dashboard.html', 
+                              workouts=workouts,
+                              workout_data=workout_data,
+                              monthly_workouts=monthly_workouts,
+                              streak=streak,
+                              favorite_exercise=favorite_exercise)
     
     @app.route('/exercises')
     @login_required
