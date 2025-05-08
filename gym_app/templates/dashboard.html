@@ -176,13 +176,26 @@
         const dateWeightMap = {};
         const dateDetailsMap = {};
         
+        // Enhanced logging for debugging
+        console.log('Raw workout data:', workoutDetails);
+        
         for (let i = 0; i < workoutDates.length; i++) {
             dateWeightMap[workoutDates[i]] = workoutWeights[i];
         }
         
-        for (let i = 0; i < workoutDetails.length; i++) {
-            const workout = workoutDetails[i];
-            dateDetailsMap[workout.date] = workout;
+        // Process workout details more carefully
+        if (workoutDetails && workoutDetails.length > 0) {
+            for (let i = 0; i < workoutDetails.length; i++) {
+                const workout = workoutDetails[i];
+                if (workout && workout.date) {
+                    console.log(`Processing workout for date: ${workout.date}`);
+                    dateDetailsMap[workout.date] = workout;
+                } else {
+                    console.error('Workout missing date property:', workout);
+                }
+            }
+        } else {
+            console.warn('No workout details available');
         }
         
         // Debug logging for workout data (remove in production)

@@ -96,87 +96,115 @@ def create_app():
     @login_required
     def dashboard():
         """User's dashboard with workout history."""
-        from sqlalchemy.orm import joinedload
-        
-        # Get all user workouts with exercises preloaded
+        # Get all user workouts
         workouts = Workout.query.filter_by(user_id=current_user.id).order_by(Workout.date.desc()).all()
         
-        # Calculate monthly workouts
+        # Calculate monthly workouts (current month)
         current_month = datetime.now().month
         current_year = datetime.now().year
+        month_start = datetime(current_year, current_month, 1)
+        
+        if current_month == 12:
+            month_end = datetime(current_year + 1, 1, 1)
+        else:
+            month_end = datetime(current_year, current_month + 1, 1)
+            
         monthly_workouts = Workout.query.filter(
             Workout.user_id == current_user.id,
-            Workout.date.between(
-                datetime(current_year, current_month, 1),
-                datetime(current_year, current_month + 1, 1) if current_month < 12 else datetime(current_year + 1, 1, 1)
-            )
+            Workout.date >= month_start,
+            Workout.date < month_end
         ).count()
         
         # Calculate streak (simplified)
         streak = 0
-        # Streak logic would go here
+        # Simple streak logic could be added here later
         
         # Find favorite exercise (most used)
         favorite_exercise = "None yet"
-        # Favorite exercise logic would go here
+        # More complex favorite exercise logic could be added here later
         
         # Prepare detailed workout data for the calendar view
         workout_data = []
         
+        print(f"Processing {len(workouts)} workouts for user {current_user.id}")
+        
         for workout in workouts:
-            # Get all exercises for this workout
-            workout_exercises = WorkoutExercise.query.filter_by(workout_id=workout.id).all()
-            
-            # Calculate total weight for this workout
-            total_weight = 0
-            exercise_details = []
-            
-            # Primary muscle group (most used in this workout)
-            muscle_groups = {}
-            
-            for we in workout_exercises:
-                # Get the exercise info
-                exercise = Exercise.query.get(we.exercise_id)
+            try:
+                # Format date as ISO string for JavaScript
+                workout_date = workout.date.strftime('%Y-%m-%d')
                 
-                # Count muscle groups
-                if exercise.muscle_group:
-                    muscle_groups[exercise.muscle_group] = muscle_groups.get(exercise.muscle_group, 0) + 1
+                # Get all exercises for this workout
+                workout_exercises = WorkoutExercise.query.filter_by(workout_id=workout.id).all()
+                print(f"Workout {workout.id} has {len(workout_exercises)} exercises")
                 
-                # Calculate weight for this exercise
-                exercise_weight = 0
-                sets = we.sets_data or []
+                # Calculate total weight for this workout
+                total_weight = 0
+                exercise_details = []
                 
-                for s in sets:
-                    exercise_weight += float(s.get('weight', 0)) * int(s.get('reps', 0))
+                # Primary muscle group tracking
+                muscle_groups = {}
                 
-                total_weight += exercise_weight
+                for we in workout_exercises:
+                    # Get the exercise info
+                    exercise = Exercise.query.get(we.exercise_id)
+                    
+                    if not exercise:
+                        print(f"Exercise {we.exercise_id} not found")
+                        continue
+                        
+                    # Count muscle groups for determining primary
+                    if exercise.muscle_group:
+                        muscle_groups[exercise.muscle_group] = muscle_groups.get(exercise.muscle_group, 0) + 1
+                    
+                    # Calculate weight for this exercise
+                    exercise_weight = 0
+                    sets = we.sets_data or []
+                    
+                    for s in sets:
+                        if 'weight' in s and 'reps' in s:
+                            exercise_weight += float(s.get('weight', 0)) * int(s.get('reps', 0))
+                    
+                    total_weight += exercise_weight
+                    
+                    # Add exercise details
+                    exercise_details.append({
+                        'exercise_id': we.exercise_id,
+                        'exercise_name': exercise.name,
+                        'sets': we.sets_data,
+                        'total_weight': exercise_weight
+                    })
                 
-                # Add exercise details
-                exercise_details.append({
-                    'exercise_id': we.exercise_id,
-                    'exercise_name': exercise.name,
-                    'sets': we.sets_data,
-                    'total_weight': exercise_weight
-                })
-            
-            # Determine primary muscle group
-            primary_muscle_group = max(muscle_groups.items(), key=lambda x: x[1])[0] if muscle_groups else "general"
-            
-            # Format date as ISO string for JavaScript
-            workout_date = workout.date.strftime('%Y-%m-%d')
-            
-            workout_data.append({
-                'date': workout_date,
-                'workout': {
-                    'id': workout.id,
-                    'name': workout.name,
-                    'date': workout.date,
-                    'completed': workout.completed
-                },
-                'total_weight': total_weight,
-                'primary_muscle_group': primary_muscle_group,
-                'workout_exercises': exercise_details
-            })
+                # Determine primary muscle group (most used in this workout)
+                primary_muscle_group = "general"
+                if muscle_groups:
+                    try:
+                        primary_muscle_group = max(muscle_groups.items(), key=lambda x: x[1])[0]
+                    except (ValueError, KeyError) as e:
+                        print(f"Error determining primary muscle group: {e}")
+                
+                # Create workout data entry
+                workout_entry = {
+                    'date': workout_date,
+                    'workout': {
+                        'id': workout.id,
+                        'name': workout.name or f"Workout {workout.id}",
+                        'date': workout_date,
+                        'completed': bool(workout.completed)
+                    },
+                    'total_weight': float(total_weight),
+                    'primary_muscle_group': primary_muscle_group,
+                    'workout_exercises': exercise_details
+                }
+                
+                workout_data.append(workout_entry)
+                print(f"Added workout data for {workout_date}, total weight: {total_weight}")
+                
+            except Exception as e:
+                print(f"Error processing workout {workout.id}: {str(e)}")
+        
+        # Update stats based on processed data
+        if workout_data and len(workout_data) > 0:
+            monthly_workouts = sum(1 for w in workout_data if w['date'][:7] == f"{current_year}-{current_month:02d}")
         
         return render_template('dashboard.html', 
                               workouts=workouts,
@@ -253,10 +281,18 @@ def create_app():
             flash('Access denied')
             return redirect(url_for('dashboard'))
         
+        # Mark as completed and save    
         workout.completed = True
+        
+        # Make sure we have a name if none was provided
+        if not workout.name:
+            # Use the date as a default name if none is set
+            workout.name = f"Workout on {workout.date.strftime('%B %d, %Y')}"
+        
         db.session.commit()
         
-        flash('Workout completed successfully!')
+        # Provide clear feedback
+        flash('Workout committed successfully!')
         return redirect(url_for('dashboard'))
     
     @app.route('/workout/<int:workout_id>/exercise/<int:exercise_id>/set', methods=['POST'])
