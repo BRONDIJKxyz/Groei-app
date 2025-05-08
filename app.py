@@ -206,9 +206,69 @@ def create_app():
         if workout_data and len(workout_data) > 0:
             monthly_workouts = sum(1 for w in workout_data if w['date'][:7] == f"{current_year}-{current_month:02d}")
         
+        # Create a JSON-safe version of the workout data
+        import json
+        try:
+            workout_data_json = json.dumps(workout_data)
+        except TypeError as e:
+            print(f"JSON serialization error: {e}")
+            # Fallback to a simplified version if full serialization fails
+            simplified_data = []
+            for wd in workout_data:
+                try:
+                    # Create a fully serializable copy with simpler structure
+                    wd_copy = {
+                        'date': wd['date'],
+                        'total_weight': float(wd['total_weight']),
+                        'primary_muscle_group': str(wd['primary_muscle_group']),
+                        'workout': {
+                            'id': wd['workout']['id'],
+                            'name': str(wd['workout']['name']),
+                            'date': wd['workout']['date'],
+                            'completed': bool(wd['workout']['completed'])
+                        },
+                        'workout_exercises': []
+                    }
+                    
+                    # Simplify exercise data
+                    for ex in wd['workout_exercises']:
+                        ex_copy = {
+                            'exercise_id': ex['exercise_id'],
+                            'exercise_name': str(ex['exercise_name']),
+                            'total_weight': float(ex['total_weight']),
+                            'sets': []
+                        }
+                        
+                        # Copy sets data with explicit type conversion
+                        if 'sets' in ex and ex['sets']:
+                            for s in ex['sets']:
+                                if isinstance(s, dict):
+                                    # Make a simple set dict with only the needed fields
+                                    set_copy = {
+                                        'weight': float(s.get('weight', 0)),
+                                        'reps': int(s.get('reps', 0))
+                                    }
+                                    ex_copy['sets'].append(set_copy)
+                        
+                        wd_copy['workout_exercises'].append(ex_copy)
+                    
+                    simplified_data.append(wd_copy)
+                except Exception as e:
+                    print(f"Error simplifying workout data: {e}")
+            
+            # Try to serialize the simplified data
+            try:
+                workout_data_json = json.dumps(simplified_data)
+                # Replace workout_data with the simplified version that works
+                workout_data = simplified_data
+            except TypeError as e:
+                print(f"Still can't serialize simplified data: {e}")
+                workout_data_json = '[]'  # Last resort fallback to empty array
+        
         return render_template('dashboard.html', 
                               workouts=workouts,
                               workout_data=workout_data,
+                              workout_data_json=workout_data_json,  # Add the serialized JSON data
                               monthly_workouts=monthly_workouts,
                               streak=streak,
                               favorite_exercise=favorite_exercise)

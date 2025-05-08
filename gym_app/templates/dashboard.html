@@ -82,7 +82,7 @@
                 <div id="monthly-calendar" class="monthly-calendar" 
                     data-workout-dates='{{ workout_data|map(attribute="date")|list|tojson }}' 
                     data-workout-weights='{{ workout_data|map(attribute="total_weight")|list|tojson }}'
-                    data-workout-details='{{ workout_data|tojson }}'>
+                    data-workout-details='{{ workout_data_json }}'>
                     <!-- Calendar cells will be populated by JavaScript -->
                 </div>
                 
