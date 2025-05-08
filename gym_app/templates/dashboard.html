@@ -65,6 +65,16 @@
             </div>
         </div>
         
+        <div class="heatmap-legend">
+            <span>0 kg</span>
+            <div class="heat-level-0 legend-box"></div>
+            <div class="heat-level-1 legend-box"></div>
+            <div class="heat-level-2 legend-box"></div>
+            <div class="heat-level-3 legend-box"></div>
+            <div class="heat-level-4 legend-box"></div>
+            <span>10000+ kg</span>
+        </div>
+        
         {% if workout_data %}
             <div class="calendar-container">
                 <!-- Weekday headers -->
@@ -244,8 +254,8 @@
             
             // Get day of week of first day (0 = Sunday, 6 = Saturday)
             let firstDayOfWeek = firstDay.getDay();
-            // Adjust to make Sunday the last day (0 = Monday, 6 = Sunday)
-            firstDayOfWeek = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1;
+            // Calendar starts with Sunday as first column (0), so no adjustment needed
+            // This ensures May 5, 2025 (a Monday) will be in the Monday column
             
             // Get number of days in month
             const daysInMonth = lastDay.getDate();
@@ -260,9 +270,9 @@
             const totalDays = prevMonthDays + daysInMonth;
             const rows = Math.ceil(totalDays / 7);
             
-            // Add days from previous month
-            for (let i = 0; i < prevMonthDays; i++) {
-                const prevMonthDay = prevMonthLastDay - prevMonthDays + i + 1;
+            // Add days from previous month - ensuring Sunday is first column (0) for 2025 calendar
+            for (let i = 0; i < firstDayOfWeek; i++) {
+                const prevMonthDay = prevMonthLastDay - firstDayOfWeek + i + 1;
                 const prevMonth = month === 0 ? 11 : month - 1;
                 const prevYear = month === 0 ? year - 1 : year;
                 addCalendarDay(prevMonthDay, prevMonth, prevYear, true);
@@ -337,8 +347,25 @@
             // Store date data
             dayEl.setAttribute('data-date', dateStr);
             
-            // Add click event listener to show workout details
+            // Add hover and click events to show workout details
             if (hasWorkout) {
+                // Replace click with mouseover for desktop
+                dayEl.addEventListener('mouseover', function(e) {
+                    showWorkoutPopup(dateStr, e);
+                });
+                
+                // Hide popup on mouseout
+                dayEl.addEventListener('mouseout', function(e) {
+                    hideWorkoutPopup();
+                });
+                
+                // Add touch event support for mobile
+                dayEl.addEventListener('touchstart', function(e) {
+                    e.preventDefault(); // Prevent scrolling on touch
+                    showWorkoutPopup(dateStr, e);
+                });
+                
+                // Keep click for accessibility
                 dayEl.addEventListener('click', function(e) {
                     showWorkoutPopup(dateStr, e);
                 });
@@ -455,11 +482,16 @@
             }, 10);
         }
         
+        // Hide workout popup
+        function hideWorkoutPopup() {
+            popupEl.classList.remove('visible');
+            document.removeEventListener('click', closePopupOnClickOutside);
+        }
+        
         // Close popup when clicking outside
         function closePopupOnClickOutside(e) {
             if (!popupEl.contains(e.target) && !e.target.closest('.calendar-day')) {
-                popupEl.classList.remove('visible');
-                document.removeEventListener('click', closePopupOnClickOutside);
+                hideWorkoutPopup();
             }
         }
     });
@@ -585,6 +617,26 @@
         margin-left: auto;
     }
     
+    .heatmap-legend {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        margin: 0.5rem 0;
+        justify-content: flex-end;
+    }
+    
+    .heatmap-legend span {
+        font-size: 0.75rem;
+        color: #6B7280;
+        font-weight: 500;
+    }
+    
+    .legend-box {
+        width: 12px;
+        height: 12px;
+        border-radius: 2px;
+    }
+    
     .month-controls h3 {
         font-size: 1.25rem;
         font-weight: 600;
@@ -630,20 +682,20 @@
     .monthly-calendar {
         display: grid;
         grid-template-columns: repeat(7, 1fr);
-        grid-auto-rows: minmax(60px, 1fr);
-        gap: 4px;
+        grid-auto-rows: minmax(45px, 1fr);
+        gap: 3px;
         border-radius: 4px;
     }
     
     .calendar-day {
         position: relative;
-        min-height: 60px;
-        border-radius: 6px;
-        padding: 4px;
+        min-height: 45px;
+        border-radius: 4px;
+        padding: 3px;
         background-color: #F9FAFB;
         border: 1px solid #E5E7EB;
         cursor: pointer;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
     }
     
     .calendar-day:hover {
@@ -704,8 +756,8 @@
         position: absolute;
         top: 0;
         left: 0;
-        width: 350px;
-        max-width: 100%;
+        width: 300px;
+        max-width: 90vw;
         background-color: #1F2937;
         color: white;
         border-radius: 8px;
@@ -713,7 +765,7 @@
         z-index: 10;
         opacity: 0;
         visibility: hidden;
-        transition: opacity 0.3s, visibility 0.3s;
+        transition: opacity 0.2s, visibility 0.2s;
         pointer-events: none;
         overflow: hidden;
     }
