@@ -10,6 +10,7 @@
             <i class="fas fa-plus-circle"></i> New Workout
         </a>
     </header>
+    <div style="clear: both;"></div>
 
     <!-- Stat Cards -->
     <div class="stat-cards">
@@ -311,8 +312,12 @@
                 dayEl.classList.add('today');
             }
             
-            // Check if this day has workout data
+            // Check if this day has workout data - accounting for timezone differences
             const hasWorkout = dateStr in dateWeightMap;
+            
+            // Debug date detection
+            console.log(`Checking day ${dateStr}, hasWorkout: ${hasWorkout}`);
+            
             if (hasWorkout) {
                 dayEl.classList.add('has-workout');
                 const weight = dateWeightMap[dateStr];
@@ -329,6 +334,35 @@
                 else if (weight > 10000) intensity = 4;
                 
                 dayEl.classList.add(`heat-level-${intensity}`);
+            } else {
+                // Check for potential timezone offset issues - look for workouts on adjacent days
+                // This helps with the issue where a workout might be off by one day due to timezone
+                const yesterday = new Date(date);
+                yesterday.setDate(date.getDate() - 1);
+                const yesterdayStr = yesterday.toISOString().split('T')[0];
+                
+                const tomorrow = new Date(date);
+                tomorrow.setDate(date.getDate() + 1);
+                const tomorrowStr = tomorrow.toISOString().split('T')[0];
+                
+                // If workout appears on an adjacent day due to timezone issues, show it on the correct day
+                if (yesterdayStr in dateWeightMap) {
+                    console.log(`Found workout on yesterday (${yesterdayStr}) for date ${dateStr}`);
+                    dayEl.classList.add('has-workout');
+                    const weight = dateWeightMap[yesterdayStr];
+                    
+                    // Determine intensity based on weight
+                    let intensity = 0;
+                    if (weight > 0 && weight <= 1000) intensity = 1;
+                    else if (weight > 1000 && weight <= 3000) intensity = 2;
+                    else if (weight > 3000 && weight <= 10000) intensity = 3;
+                    else if (weight > 10000) intensity = 4;
+                    
+                    dayEl.classList.add(`heat-level-${intensity}`);
+                    
+                    // Store the actual date that has workout data for popup
+                    dayEl.setAttribute('data-workout-date', yesterdayStr);
+                }
             }
             
             // Add day number
@@ -377,9 +411,22 @@
         
         // Show workout popup with details
         function showWorkoutPopup(dateStr, event) {
+            // Get the actual date that may have been corrected for timezone issues
+            const actualDateStr = event.currentTarget.getAttribute('data-workout-date') || dateStr;
+            console.log(`Showing popup for date: ${dateStr}, actual workout date: ${actualDateStr}`);
+            
             // Get workout details
-            const workoutData = dateDetailsMap[dateStr];
-            if (!workoutData) return;
+            let workoutData = dateDetailsMap[actualDateStr];
+            
+            // If no workout data found for the actual date, try the original date
+            if (!workoutData) {
+                workoutData = dateDetailsMap[dateStr];
+            }
+            
+            if (!workoutData) {
+                console.warn(`No workout data found for dates: ${actualDateStr} or ${dateStr}`);
+                return;
+            }
             
             // Format date for header
             const date = new Date(dateStr);
@@ -503,6 +550,7 @@
         max-width: 1200px;
         margin: 0 auto;
         padding: 2rem 1rem;
+        position: relative;
     }
     
     .dashboard-header {
@@ -510,6 +558,8 @@
         justify-content: space-between;
         align-items: center;
         margin-bottom: 2rem;
+        position: relative;
+        z-index: 1;
     }
     
     .dashboard-header h1 {

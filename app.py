@@ -131,7 +131,9 @@ def create_app():
         for workout in workouts:
             try:
                 # Format date as ISO string for JavaScript
+                # Make sure we're using local timezone date to match the user's calendar view
                 workout_date = workout.date.strftime('%Y-%m-%d')
+                print(f"Processing workout with date: {workout.date} -> formatted as {workout_date}")
                 
                 # Get all exercises for this workout
                 workout_exercises = WorkoutExercise.query.filter_by(workout_id=workout.id).all()
