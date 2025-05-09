@@ -37,16 +37,9 @@
         </div>
     </div>
 
-    <!-- Debug stats - uncomment if needed -->
-    <div class="bg-gray-100 p-3 rounded mb-4">
-        <p>Total exercises in database: {{ total_count }}</p>
-        <p>Exercises displayed: <span id="displayed-count">0</span></p>
-        <div class="text-xs mt-2">
-            {% for group, count in muscle_group_counts.items() %}
-                <span class="mr-3">{{ group }}: {{ count }}</span>
-            {% endfor %}
-        </div>
-    </div>
+    <!-- 
+    Removed debug stats to clean up the interface
+    -->
 
     <div class="exercise-list grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {% if exercises %}
