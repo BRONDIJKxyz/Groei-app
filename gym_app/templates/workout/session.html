@@ -86,20 +86,17 @@
                             {% if workout_exercise.sets_data %}
                                 {% for set in workout_exercise.sets_data %}
                                     <div class="set-card">
-                                        <div class="set-number">Set {{ loop.index }}</div>
+                                        <div class="set-number">{{ loop.index }}</div>
                                         <div class="set-details">
-                                            <div class="set-weight">
-                                                <span class="set-weight-value">{{ set.weight|round|int }}</span>
-                                                <span class="set-label">kg</span>
-                                            </div>
-                                            <div class="set-reps">
-                                                <span class="set-reps-value">{{ set.reps }}</span>
-                                                <span class="set-label">reps</span>
-                                            </div>
+                                            <span class="set-weight-value">{{ set.weight|round|int }}</span>
+                                            <span class="set-unit">kg</span>
+                                            <span class="set-separator">×</span>
+                                            <span class="set-reps-value">{{ set.reps }}</span>
+                                            <span class="set-unit">reps</span>
                                         </div>
-                                        <form method="POST" action="{{ url_for('workout.delete_set', workout_id=workout.id, exercise_id=workout_exercise.exercise_id, set_index=loop.index) }}" class="delete-set-form inline ml-2">
-                                            <button type="submit" class="btn btn-xs btn-danger" title="Delete set">
-                                                <i class="fas fa-trash-alt"></i>
+                                        <form method="POST" action="{{ url_for('workout.delete_set', workout_id=workout.id, exercise_id=workout_exercise.exercise_id, set_index=loop.index) }}" class="delete-set-form">
+                                            <button type="submit" class="delete-btn" title="Delete set">
+                                                <i class="fas fa-times"></i>
                                             </button>
                                         </form>
                                     </div>
@@ -187,8 +184,10 @@
 <!-- History Modal -->
 <div id="history-modal" class="modal" style="display:none;">
   <div class="modal-content">
-    <span class="close-modal">&times;</span>
-    <h4 id="history-modal-title">Exercise History</h4>
+    <div class="modal-header">
+      <h4 id="history-modal-title">Exercise History</h4>
+      <button class="close-modal">&times;</button>
+    </div>
     <div id="history-content" class="history-content">
       <!-- Filled by JS -->
     </div>
@@ -198,12 +197,19 @@
 <style>
     .workout-session-container {
         margin-bottom: 2rem;
+        padding: 0.75rem;
     }
     
     .workout-session {
         display: grid;
-        grid-template-columns: 300px 1fr;
-        gap: 1.5rem;
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    @media (min-width: 768px) {
+        .workout-session {
+            grid-template-columns: 280px 1fr;
+        }
     }
     
     .sidebar {
@@ -258,22 +264,105 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 1rem;
-        background-color: var(--color-gray-100);
-        border-bottom: 1px solid var(--color-gray-200);
+        margin-bottom: 0.75rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid var(--color-gray-100);
     }
     
     .sets-container {
-        padding: 1rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .set-card {
+        display: flex;
+        align-items: center;
+        background-color: var(--color-gray-50);
+        border: 1px solid var(--color-gray-200);
+        border-radius: 8px;
+        padding: 0.5rem;
+        position: relative;
+        transition: all 0.15s ease;
+        flex: 1 0 auto;
+        min-width: 120px;
+        max-width: 200px;
+    }
+    
+    .set-card:hover {
+        background-color: var(--color-gray-100);
+        border-color: var(--color-gray-300);
+    }
+    
+    .set-number {
+        font-weight: 600;
+        color: var(--color-primary-500);
+        width: 20px;
+        font-size: 0.875rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: var(--color-primary-50);
+        border-radius: 50%;
+        height: 20px;
+        margin-right: 0.5rem;
+    }
+    
+    .set-details {
+        display: flex;
+        align-items: baseline;
+        flex-grow: 1;
+        font-size: 0.95rem;
+        white-space: nowrap;
+    }
+    
+    .set-weight-value, .set-reps-value {
+        font-weight: 600;
+        font-size: 1rem;
+    }
+    
+    .set-unit {
+        color: var(--color-gray-500);
+        font-size: 0.75rem;
+        margin-right: 0.25rem;
+    }
+    
+    .set-separator {
+        color: var(--color-gray-400);
+        margin: 0 0.25rem;
+    }
+    
+    .delete-set-form {
+        margin-left: 0.5rem;
+    }
+    
+    .delete-btn {
+        background: none;
+        border: none;
+        color: var(--color-gray-400);
+        padding: 0.25rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        font-size: 0.75rem;
+    }
+    
+    .delete-btn:hover {
+        color: var(--color-red-500);
+        background: var(--color-red-50);
     }
     
     .total-weight {
-        text-align: right;
-        padding: 0.75rem;
-        font-weight: 600;
-        color: var(--color-gray-800);
-        border-top: 1px solid var(--color-gray-200);
-        margin: 0.5rem 0;
+        font-size: 0.95rem;
+        color: var(--color-gray-600);
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        background-color: var(--color-gray-50);
+        border-radius: 4px;
     }
     
     .total-weight-value {
@@ -315,6 +404,35 @@
             position: relative;
             height: auto;
             top: 0;
+            margin-bottom: 1rem;
+        }
+        
+        .exercise-tracking-card {
+            padding: 0.75rem;
+        }
+        
+        .exercise-tracking-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .exercise-tracking-header .badge {
+            margin-top: 0.25rem;
+            margin-left: 0;
+        }
+        
+        .action-buttons {
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        
+        .add-set-form .form-row {
+            flex-direction: column;
+        }
+        
+        .add-set-form .form-group + .form-group {
+            margin-left: 0;
+            margin-top: 0.5rem;
         }
     }
 </style>
@@ -385,8 +503,21 @@ document.addEventListener('DOMContentLoaded', function() {
             fetch(`/workout/api/exercise/${exerciseId}/history`)
                 .then(r=>r.json())
                 .then(data=>{
-                    modalTitle.textContent = `History for ${this.textContent}`;
-                    historyContent.innerHTML = data.length ? data.map(item=>`<p><strong>${item.date}</strong>: ${Math.round(item.total_weight)} kg</p>`).join('') : '<p>No history yet.</p>';
+                    modalTitle.textContent = `${this.textContent} History`;
+                    
+                    if (data.length) {
+                        const historyHTML = data.map(item => {
+                            const sets = item.sets.map(set => `${set.weight}kg × ${set.reps}`).join(', ');
+                            return `<div class="history-item">
+                                <div class="history-date">${item.date}</div>
+                                <div class="history-weight">${Math.round(item.total_weight)} kg total</div>
+                                <div class="history-sets">${sets}</div>
+                            </div>`;
+                        }).join('');
+                        historyContent.innerHTML = historyHTML;
+                    } else {
+                        historyContent.innerHTML = '<p class="no-history">No previous records yet.</p>';
+                    }
                     modal.style.display='block';
                 });
         });

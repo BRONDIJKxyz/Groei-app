@@ -45,27 +45,54 @@
 </head>
 <body class="flex flex-col min-h-screen bg-gray-50">
     <header class="bg-gradient-to-r from-indigo-600 to-blue-500 text-white shadow-md">
-        <nav class="container mx-auto px-4 py-3 flex justify-between items-center">
-            <a href="{{ url_for('main.index') }}" class="text-2xl font-bold flex items-center">
-                <i class="fas fa-dumbbell mr-2"></i>
-                <span>Groei App</span>
-            </a>
-            <div>
+        <nav class="container mx-auto px-4 py-3">
+            <div class="flex justify-between items-center">
+                <!-- App Logo - Always visible -->
+                <a href="{{ url_for('main.index') }}" class="text-xl md:text-2xl font-bold flex items-center">
+                    <i class="fas fa-dumbbell mr-2"></i>
+                    <span>Groei App</span>
+                </a>
+
+                <!-- Mobile menu button -->
+                <button id="mobile-menu-button" class="md:hidden p-2 rounded focus:outline-none">
+                    <i class="fas fa-bars text-white text-xl"></i>
+                </button>
+
+                <!-- Desktop Navigation -->
+                <div class="hidden md:flex md:items-center">
+                    {% if current_user.is_authenticated %}
+                        <a href="{{ url_for('main.dashboard') }}" class="px-3 py-2 rounded hover:bg-blue-700 transition mr-1">Dashboard</a>
+                        <a href="{{ url_for('workout.exercise_list') }}" class="px-3 py-2 rounded hover:bg-blue-700 transition mr-1">Exercises</a>
+                        <a href="{{ url_for('workout.new_workout') }}" class="px-3 py-2 bg-green-600 rounded hover:bg-green-700 transition mr-1">
+                            <i class="fas fa-plus mr-1"></i><span class="hidden sm:inline">New Workout</span>
+                        </a>
+                        <a href="{{ url_for('auth.logout') }}" class="px-3 py-2 rounded hover:bg-blue-700 transition">
+                            <i class="fas fa-sign-out-alt mr-1"></i><span class="hidden sm:inline">Logout</span>
+                        </a>
+                    {% else %}
+                        <a href="{{ url_for('auth.login') }}" class="px-3 py-2 rounded hover:bg-blue-700 transition mr-1">Login</a>
+                        <a href="{{ url_for('auth.register') }}" class="px-3 py-2 bg-green-600 rounded hover:bg-green-700 transition">Sign Up</a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Mobile Navigation Menu (hidden by default) -->
+            <div id="mobile-menu" class="hidden md:hidden mt-2 pb-2">
                 {% if current_user.is_authenticated %}
-                    <div class="flex items-center">
-                        <a href="{{ url_for('main.dashboard') }}" class="px-3 py-2 rounded hover:bg-blue-700 transition">Dashboard</a>
-                        <a href="{{ url_for('workout.exercise_list') }}" class="px-3 py-2 rounded hover:bg-blue-700 transition">Exercises</a>
-                        <a href="{{ url_for('workout.new_workout') }}" class="px-3 py-2 ml-2 bg-green-600 rounded hover:bg-green-700 transition">
+                    <div class="flex flex-col space-y-2">
+                        <a href="{{ url_for('main.dashboard') }}" class="px-3 py-2 rounded hover:bg-blue-700 transition block">Dashboard</a>
+                        <a href="{{ url_for('workout.exercise_list') }}" class="px-3 py-2 rounded hover:bg-blue-700 transition block">Exercises</a>
+                        <a href="{{ url_for('workout.new_workout') }}" class="px-3 py-2 bg-green-600 rounded hover:bg-green-700 transition block">
                             <i class="fas fa-plus mr-1"></i> New Workout
                         </a>
-                        <a href="{{ url_for('auth.logout') }}" class="px-3 py-2 ml-2 rounded hover:bg-blue-700 transition">
+                        <a href="{{ url_for('auth.logout') }}" class="px-3 py-2 rounded hover:bg-blue-700 transition block">
                             <i class="fas fa-sign-out-alt mr-1"></i> Logout
                         </a>
                     </div>
                 {% else %}
-                    <div>
-                        <a href="{{ url_for('auth.login') }}" class="px-3 py-2 rounded hover:bg-blue-700 transition">Login</a>
-                        <a href="{{ url_for('auth.register') }}" class="px-3 py-2 ml-2 bg-green-600 rounded hover:bg-green-700 transition">Sign Up</a>
+                    <div class="flex flex-col space-y-2">
+                        <a href="{{ url_for('auth.login') }}" class="px-3 py-2 rounded hover:bg-blue-700 transition block">Login</a>
+                        <a href="{{ url_for('auth.register') }}" class="px-3 py-2 bg-green-600 rounded hover:bg-green-700 transition block">Sign Up</a>
                     </div>
                 {% endif %}
             </div>
@@ -117,6 +144,21 @@
 
     <!-- JavaScript -->
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    
+    <!-- Mobile menu toggle script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            
+            if (mobileMenuButton && mobileMenu) {
+                mobileMenuButton.addEventListener('click', function() {
+                    mobileMenu.classList.toggle('hidden');
+                });
+            }
+        });
+    </script>
+    
     {% block extra_js %}{% endblock %}
 </body>
 </html>
