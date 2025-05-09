@@ -295,7 +295,8 @@
         // Add a day to the calendar
         function addCalendarDay(day, month, year, isOtherMonth) {
             const date = new Date(year, month, day);
-            const dateStr = date.toISOString().split('T')[0];
+            // Generate date string in local timezone to avoid off-by-one due to UTC conversion
+            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
             
             const dayEl = document.createElement('div');
             dayEl.className = 'calendar-day';
@@ -334,30 +335,8 @@
                 
                 dayEl.classList.add(`heat-level-${intensity}`);
             } else {
-                // We don't need to check adjacent days anymore as we want to display
-                // workouts exactly on the days they were recorded
-                
                 // For debugging only - log dates we've checked
                 console.log(`No workout found for ${dateStr}`);
-                
-                // Special case for May 8th, 2025 - ensure workout shows on the 8th, not 9th
-                if (dateStr === '2025-05-08') {
-                    console.log('Found May 8th workout - making sure it displays here');
-                    dayEl.classList.add('has-workout');
-                    dayEl.classList.add('heat-level-3');
-                    // Add workout indicator
-                    const indicator = document.createElement('div');
-                    indicator.className = 'workout-indicator';
-                    dayEl.appendChild(indicator);
-                } else if (dateStr === '2025-05-09') {
-                    // Remove workout indicator from May 9th if it exists
-                    console.log('Removing workout from May 9th if present');
-                    dayEl.classList.remove('has-workout');
-                    dayEl.classList.remove('heat-level-1');
-                    dayEl.classList.remove('heat-level-2');
-                    dayEl.classList.remove('heat-level-3');
-                    dayEl.classList.remove('heat-level-4');
-                }
             }
             
             // Add day number
