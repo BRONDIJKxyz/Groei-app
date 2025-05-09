@@ -1,8 +1,9 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, session
 from flask_login import current_user, login_required
 from datetime import datetime
 from gym_app.models import Exercise, Workout, WorkoutExercise
 from gym_app import db
+from sqlalchemy import or_, and_, func
 
 workout_bp = Blueprint('workout', __name__, url_prefix='/workout')
 
@@ -83,11 +84,15 @@ def session(workout_id):
     
     exercises = WorkoutExercise.query.filter_by(workout_id=workout_id).all()
     all_exercises = Exercise.query.all()
+
+    # Pop potential PR value stored in session by add_set
+    pr_exercise = session.pop('pr_exercise', None)
     
     return render_template('workout/session.html', 
                           workout=workout, 
                           exercises=exercises,
-                          all_exercises=all_exercises)
+                          all_exercises=all_exercises,
+                          pr_exercise=pr_exercise)
 
 @workout_bp.route('/<int:workout_id>/add', methods=['POST'])
 @login_required
@@ -138,13 +143,19 @@ def add_exercise(workout_id):
 @workout_bp.route('/<int:workout_id>/complete', methods=['POST'])
 @login_required
 def complete_workout(workout_id):
-    """Mark workout as completed (similar to a git commit)."""
+    """Mark workout as completed (similar to a git commit). Prevent finishing if there are open exercises."""
     workout = Workout.query.get_or_404(workout_id)
     
     if workout.user_id != current_user.id:
-        flash('Access denied')
+        flash('Access denied', 'error')
         return redirect(url_for('main.dashboard'))
-    
+
+    # Check for any exercises that are not completed yet
+    open_exercises = WorkoutExercise.query.filter_by(workout_id=workout_id).filter(or_(WorkoutExercise.completed == None, WorkoutExercise.completed == False)).all()
+    if open_exercises:
+        flash('You still have uncompleted exercises in this workout. Mark them as completed before finishing.', 'warning')
+        return redirect(url_for('workout.session', workout_id=workout_id))
+
     workout.completed = True
     db.session.commit()
     
@@ -169,7 +180,26 @@ def add_set(workout_id, exercise_id):
     workout_exercise.sets_data = sets_data
     
     db.session.commit()
-    
+
+    # ------------------------------------------------------
+    # Personal record detection (exclude first ever attempt)
+    # ------------------------------------------------------
+    new_total = workout_exercise.total_weight
+    # Previous best for this exercise (completed workouts only)
+    prev_exercises = (
+        WorkoutExercise.query.join(Workout)
+        .filter(
+            Workout.user_id == current_user.id,
+            WorkoutExercise.exercise_id == exercise_id,
+            Workout.id != workout_id,
+            WorkoutExercise.completed == True
+        ).all()
+    )
+    prev_best = max([we.total_weight for we in prev_exercises], default=0)
+    if prev_exercises and new_total > prev_best:
+        # Store exercise name in session so next load shows confetti
+        session['pr_exercise'] = workout_exercise.exercise.name
+
     return redirect(url_for('workout.session', workout_id=workout_id))
 
 @workout_bp.route('/add-exercise', methods=['POST'])
@@ -273,6 +303,35 @@ def complete_exercise(workout_id, exercise_id):
         flash(f"Error completing exercise: {str(e)}", "error")
         return redirect(url_for('workout.session', workout_id=workout_id))
 
+# -------------------------------------------------------------------
+# Set deletion route
+# -------------------------------------------------------------------
+@workout_bp.route('/<int:workout_id>/exercise/<int:exercise_id>/set/<int:set_index>/delete', methods=['POST'])
+@login_required
+def delete_set(workout_id, exercise_id, set_index):
+    """Remove a set by its 1-based index from an exercise within a workout."""
+    try:
+        workout = Workout.query.get_or_404(workout_id)
+        if workout.user_id != current_user.id:
+            flash('Access denied', 'error')
+            return redirect(url_for('main.dashboard'))
+
+        workout_exercise = WorkoutExercise.query.filter_by(workout_id=workout_id, exercise_id=exercise_id).first_or_404()
+        sets = workout_exercise.sets_data or []
+        idx = set_index - 1  # Convert to 0-based
+        if 0 <= idx < len(sets):
+            removed_set = sets.pop(idx)
+            workout_exercise.sets_data = sets
+            db.session.commit()
+            flash(f"Removed set {set_index}: {removed_set['reps']} reps @ {removed_set['weight']}kg", 'success')
+        else:
+            flash('Invalid set index', 'error')
+        return redirect(url_for('workout.session', workout_id=workout_id))
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error removing set: {str(e)}", 'error')
+        return redirect(url_for('workout.session', workout_id=workout_id))
+
 # API Routes for AJAX functionality
 @workout_bp.route('/api/exercises')
 @login_required
@@ -357,3 +416,28 @@ def api_workout_totals(workout_id):
         })
     
     return jsonify(totals)
+
+@workout_bp.route('/api/exercise/<int:exercise_id>/history')
+@login_required
+def api_exercise_history(exercise_id):
+    """Return recent history (last 10 completed workouts) for an exercise."""
+    history_records = (
+        WorkoutExercise.query.join(Workout)
+        .filter(
+            Workout.user_id == current_user.id,
+            WorkoutExercise.exercise_id == exercise_id,
+            WorkoutExercise.completed == True
+        )
+        .order_by(Workout.date.desc())
+        .limit(10)
+        .all()
+    )
+    history = [
+        {
+            'date': we.workout.date.strftime('%Y-%m-%d'),
+            'total_weight': we.total_weight,
+            'sets': we.sets_data,
+        }
+        for we in history_records
+    ]
+    return jsonify(history)
