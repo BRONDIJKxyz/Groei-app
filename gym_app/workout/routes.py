@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, session
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, session as flask_session
 from flask_login import current_user, login_required
 from datetime import datetime
 from gym_app.models import Exercise, Workout, WorkoutExercise
@@ -86,7 +86,7 @@ def session(workout_id):
     all_exercises = Exercise.query.all()
 
     # Pop potential PR value stored in session by add_set
-    pr_exercise = session.pop('pr_exercise', None)
+    pr_exercise = flask_session.pop('pr_exercise', None)
     
     return render_template('workout/session.html', 
                           workout=workout, 
@@ -198,7 +198,7 @@ def add_set(workout_id, exercise_id):
     prev_best = max([we.total_weight for we in prev_exercises], default=0)
     if prev_exercises and new_total > prev_best:
         # Store exercise name in session so next load shows confetti
-        session['pr_exercise'] = workout_exercise.exercise.name
+        flask_session['pr_exercise'] = workout_exercise.exercise.name
 
     return redirect(url_for('workout.session', workout_id=workout_id))
 
