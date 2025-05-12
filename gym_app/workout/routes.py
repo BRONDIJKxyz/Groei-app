@@ -441,3 +441,62 @@ def api_exercise_history(exercise_id):
         for we in history_records
     ]
     return jsonify(history)
+
+@workout_bp.route('/api/exercise/<int:exercise_id>/progress')
+@login_required
+def api_exercise_progress(exercise_id):
+    """Return detailed progress history for a specific exercise with max weights over time."""
+    try:
+        # Fetch exercise
+        exercise = Exercise.query.get_or_404(exercise_id)
+        
+        # Get all workout sessions for this exercise (only completed ones)
+        # Don't limit to 10 so we can see full progress history
+        workout_exercises = (
+            WorkoutExercise.query
+            .join(Workout)
+            .filter(
+                WorkoutExercise.exercise_id == exercise_id,
+                Workout.user_id == current_user.id,
+                WorkoutExercise.completed == True
+            )
+            .order_by(Workout.date.asc())  # Ascending for timeline chart
+            .all()
+        )
+        
+        # Format results for API
+        results = []
+        for we in workout_exercises:
+            # Skip entries with no sets
+            if not we.sets_data:
+                continue
+                
+            # Get the workout date
+            workout_date = we.workout.date.strftime('%Y-%m-%d')
+            
+            # Calculate max weight for this exercise session
+            max_weight = max([s.get('weight', 0) for s in we.sets_data])
+            
+            results.append({
+                'workout_id': we.workout_id,
+                'date': workout_date,
+                'formatted_date': we.workout.date.strftime('%b %d, %Y'),
+                'total_weight': we.total_weight,
+                'max_weight': max_weight
+            })
+        
+        return jsonify({
+            'success': True,
+            'exercise': {
+                'id': exercise.id,
+                'name': exercise.name,
+                'muscle_group': exercise.muscle_group
+            },
+            'progress': results
+        })
+    except Exception as e:
+        print(f"Error fetching exercise progress: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        })

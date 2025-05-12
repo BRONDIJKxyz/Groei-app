@@ -112,6 +112,88 @@
         {% endif %}
     </section>
     
+    <!-- Progress Database -->
+    <section class="dashboard-section">
+        <div class="section-header">
+            <h2>Progress Database</h2>
+        </div>
+        
+        <div class="progress-database">
+            <div class="exercise-list" id="exercise-progress-list">
+                <div class="progress-search-bar">
+                    <input type="text" id="exercise-search" placeholder="Search exercises..." class="progress-search-input">
+                </div>
+                {% if workout_data %}
+                <div class="exercise-list-items">
+                    <!-- Will be populated by JavaScript -->
+                    <div class="empty-state exercise-list-empty" style="display: none;">
+                        <i class="fas fa-dumbbell"></i>
+                        <p>No exercises match your search.</p>
+                    </div>
+                    <div class="loading-state">
+                        <i class="fas fa-circle-notch fa-spin"></i>
+                        <p>Loading your exercises...</p>
+                    </div>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-dumbbell"></i>
+                    <p>No exercise data available yet. Start working out to track your progress!</p>
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="exercise-details" id="exercise-details">
+                <div class="exercise-details-empty" style="display: flex;">
+                    <div class="empty-state">
+                        <i class="fas fa-chart-line"></i>
+                        <p>Select an exercise to view your progress.</p>
+                    </div>
+                </div>
+                <div class="exercise-details-content" style="display: none;">
+                    <div class="exercise-header">
+                        <h3 id="selected-exercise-name">Exercise Name</h3>
+                        <span class="muscle-badge" id="selected-exercise-muscle">Muscle Group</span>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="progress-chart"></canvas>
+                    </div>
+                    <div class="progress-stats">
+                        <div class="progress-stat">
+                            <span class="stat-label">Personal Record</span>
+                            <span class="stat-value" id="max-weight-value">0 kg</span>
+                        </div>
+                        <div class="progress-stat">
+                            <span class="stat-label">Last Workout</span>
+                            <span class="stat-value" id="last-workout-date">Never</span>
+                        </div>
+                        <div class="progress-stat">
+                            <span class="stat-label">Total Workouts</span>
+                            <span class="stat-value" id="total-workouts">0</span>
+                        </div>
+                    </div>
+                    <div class="workout-history">
+                        <h4>Workout History</h4>
+                        <div class="history-table-container">
+                            <table class="history-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Max Weight</th>
+                                        <th>Total Volume</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="history-table-body">
+                                    <!-- Will be populated by JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
     <!-- Recent Workouts -->
     <section class="dashboard-section">
         <div class="section-header">
@@ -159,6 +241,7 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Elements
@@ -511,6 +594,347 @@
             if (!popupEl.contains(e.target) && !e.target.closest('.calendar-day')) {
                 hideWorkoutPopup();
             }
+        }
+        // Progress Database Functionality
+        // ===============================
+        let exerciseCache = {};
+        let progressChart = null;
+        
+        // Load exercises for the progress database
+        function loadExerciseList() {
+            const exerciseList = document.getElementById('exercise-progress-list');
+            if (!exerciseList) return;
+            
+            const exerciseItems = exerciseList.querySelector('.exercise-list-items');
+            const loadingState = exerciseItems.querySelector('.loading-state');
+            
+            // Get all exercises the user has done
+            fetch('/workout/api/exercises')
+                .then(response => response.json())
+                .then(data => {
+                    // Clear loading state
+                    loadingState.style.display = 'none';
+                    
+                    // Process exercises
+                    let uniqueExercises = {};
+                    
+                    // Only show exercises that appear in workout data
+                    fetch('/workout/api/active_workouts')
+                        .then(response => response.json())
+                        .then(workoutData => {
+                            const exerciseIds = new Set();
+                            
+                            // Extract all exercise IDs from workout data
+                            workoutData.forEach(workout => {
+                                workout.exercises.forEach(exercise => {
+                                    exerciseIds.add(exercise.exercise_id);
+                                });
+                            });
+                            
+                            // Filter exercises to only include those found in workouts
+                            const usedExercises = data.filter(exercise => exerciseIds.has(exercise.id));
+                            
+                            // Sort by muscle group then name
+                            usedExercises.sort((a, b) => {
+                                if (a.muscle_group === b.muscle_group) {
+                                    return a.name.localeCompare(b.name);
+                                }
+                                return a.muscle_group.localeCompare(b.muscle_group);
+                            });
+                            
+                            // Group by muscle group
+                            const muscleGroups = {};
+                            usedExercises.forEach(exercise => {
+                                if (!muscleGroups[exercise.muscle_group]) {
+                                    muscleGroups[exercise.muscle_group] = [];
+                                }
+                                muscleGroups[exercise.muscle_group].push(exercise);
+                            });
+                            
+                            // Create HTML
+                            let html = '';
+                            Object.keys(muscleGroups).sort().forEach(muscleGroup => {
+                                html += `
+                                    <div class="exercise-group">
+                                        <h4 class="muscle-group-heading">${muscleGroup.charAt(0).toUpperCase() + muscleGroup.slice(1)}</h4>
+                                        <div class="exercise-items">
+                                `;
+                                
+                                muscleGroups[muscleGroup].forEach(exercise => {
+                                    html += `
+                                        <div class="exercise-item" data-exercise-id="${exercise.id}" data-name="${exercise.name}" data-muscle="${exercise.muscle_group}">
+                                            <span class="exercise-name">${exercise.name}</span>
+                                            <i class="fas fa-chevron-right"></i>
+                                        </div>
+                                    `;
+                                });
+                                
+                                html += `
+                                        </div>
+                                    </div>
+                                `;
+                            });
+                            
+                            // Add to DOM
+                            const exercisesContainer = document.createElement('div');
+                            exercisesContainer.classList.add('exercise-groups');
+                            exercisesContainer.innerHTML = html;
+                            exerciseItems.appendChild(exercisesContainer);
+                            
+                            // Add click handlers
+                            const exerciseElements = exerciseItems.querySelectorAll('.exercise-item');
+                            exerciseElements.forEach(element => {
+                                element.addEventListener('click', function() {
+                                    const exerciseId = this.getAttribute('data-exercise-id');
+                                    const exerciseName = this.getAttribute('data-name');
+                                    const exerciseMuscle = this.getAttribute('data-muscle');
+                                    
+                                    // Highlight selected exercise
+                                    exerciseElements.forEach(el => el.classList.remove('selected'));
+                                    this.classList.add('selected');
+                                    
+                                    // Load exercise details
+                                    loadExerciseProgress(exerciseId, exerciseName, exerciseMuscle);
+                                });
+                            });
+                            
+                            // Setup search functionality
+                            const searchInput = document.getElementById('exercise-search');
+                            const emptyState = exerciseItems.querySelector('.exercise-list-empty');
+                            
+                            if (searchInput) {
+                                searchInput.addEventListener('input', function() {
+                                    const query = this.value.toLowerCase();
+                                    let matchFound = false;
+                                    
+                                    exerciseElements.forEach(element => {
+                                        const name = element.getAttribute('data-name').toLowerCase();
+                                        const muscle = element.getAttribute('data-muscle').toLowerCase();
+                                        
+                                        if (name.includes(query) || muscle.includes(query)) {
+                                            element.style.display = 'flex';
+                                            matchFound = true;
+                                            
+                                            // Show parent group
+                                            let group = element.closest('.exercise-group');
+                                            if (group) {
+                                                group.style.display = 'block';
+                                            }
+                                        } else {
+                                            element.style.display = 'none';
+                                        }
+                                    });
+                                    
+                                    // Handle no matches
+                                    if (matchFound) {
+                                        emptyState.style.display = 'none';
+                                        
+                                        // Hide empty groups
+                                        document.querySelectorAll('.exercise-group').forEach(group => {
+                                            const visibleItems = group.querySelectorAll('.exercise-item[style="display: flex"]');
+                                            if (visibleItems.length === 0) {
+                                                group.style.display = 'none';
+                                            }
+                                        });
+                                    } else {
+                                        emptyState.style.display = 'flex';
+                                        document.querySelectorAll('.exercise-group').forEach(group => {
+                                            group.style.display = 'none';
+                                        });
+                                    }
+                                });
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error fetching workout data:', error);
+                            exerciseItems.innerHTML = `
+                                <div class="empty-state">
+                                    <i class="fas fa-exclamation-circle"></i>
+                                    <p>Error loading exercises. Please try again later.</p>
+                                </div>
+                            `;
+                        });
+                })
+                .catch(error => {
+                    console.error('Error loading exercises:', error);
+                    exerciseItems.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <p>Error loading exercises. Please try again later.</p>
+                        </div>
+                    `;
+                });
+        }
+        
+        // Load exercise progress details
+        function loadExerciseProgress(exerciseId, exerciseName, exerciseMuscle) {
+            const detailsContainer = document.getElementById('exercise-details');
+            const detailsContent = detailsContainer.querySelector('.exercise-details-content');
+            const detailsEmpty = detailsContainer.querySelector('.exercise-details-empty');
+            
+            // Set loading state
+            detailsEmpty.style.display = 'none';
+            detailsContent.style.display = 'block';
+            detailsContent.classList.add('loading');
+            
+            // Update exercise name and muscle
+            document.getElementById('selected-exercise-name').textContent = exerciseName;
+            const muscleEl = document.getElementById('selected-exercise-muscle');
+            muscleEl.textContent = exerciseMuscle.charAt(0).toUpperCase() + exerciseMuscle.slice(1);
+            muscleEl.setAttribute('data-muscle', exerciseMuscle.toLowerCase());
+            
+            // Check cache first
+            if (exerciseCache[exerciseId]) {
+                renderExerciseProgress(exerciseCache[exerciseId]);
+                return;
+            }
+            
+            // Fetch progress data
+            fetch(`/workout/api/exercise/${exerciseId}/progress`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Cache the data
+                        exerciseCache[exerciseId] = data;
+                        
+                        // Render the data
+                        renderExerciseProgress(data);
+                    } else {
+                        throw new Error(data.error || 'Failed to load progress data');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading exercise progress:', error);
+                    detailsContent.classList.remove('loading');
+                    detailsContent.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <p>Error loading progress data. Please try again later.</p>
+                        </div>
+                    `;
+                });
+        }
+        
+        // Render exercise progress data
+        function renderExerciseProgress(data) {
+            const detailsContent = document.querySelector('.exercise-details-content');
+            detailsContent.classList.remove('loading');
+            
+            const progressData = data.progress;
+            
+            // If no progress data, show empty state
+            if (!progressData || progressData.length === 0) {
+                detailsContent.innerHTML = `
+                    <div class="exercise-header">
+                        <h3 id="selected-exercise-name">${data.exercise.name}</h3>
+                        <span class="muscle-badge" data-muscle="${data.exercise.muscle_group.toLowerCase()}">
+                            ${data.exercise.muscle_group.charAt(0).toUpperCase() + data.exercise.muscle_group.slice(1)}
+                        </span>
+                    </div>
+                    <div class="empty-state">
+                        <i class="fas fa-chart-line"></i>
+                        <p>No progress data available for this exercise yet.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Calculate stats
+            const maxWeightRecord = progressData.reduce((max, curr) => 
+                (curr.max_weight > max.max_weight) ? curr : max, progressData[0]);
+            const lastWorkout = progressData[progressData.length - 1];
+            
+            // Update stats
+            document.getElementById('max-weight-value').textContent = `${maxWeightRecord.max_weight} kg`;
+            document.getElementById('last-workout-date').textContent = lastWorkout.formatted_date;
+            document.getElementById('total-workouts').textContent = progressData.length;
+            
+            // Create Chart
+            const chartCanvas = document.getElementById('progress-chart');
+            
+            // Destroy existing chart if any
+            if (progressChart) {
+                progressChart.destroy();
+            }
+            
+            // Format data for the chart
+            const chartDates = progressData.map(item => item.formatted_date);
+            const chartMaxWeights = progressData.map(item => item.max_weight);
+            
+            // Create chart
+            const ctx = chartCanvas.getContext('2d');
+            progressChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: chartDates,
+                    datasets: [{
+                        label: 'Max Weight (kg)',
+                        data: chartMaxWeights,
+                        fill: false,
+                        backgroundColor: '#4caf50',
+                        borderColor: '#4caf50',
+                        tension: 0.1,
+                        pointBackgroundColor: '#4caf50',
+                        pointBorderColor: '#fff',
+                        pointRadius: 5,
+                        pointHoverRadius: 7
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        },
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Weight (kg)'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 45
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Populate history table
+            const tableBody = document.getElementById('history-table-body');
+            tableBody.innerHTML = '';
+            
+            // Sort progress data by date descending for the table
+            const sortedData = [...progressData].sort((a, b) => {
+                return new Date(b.date) - new Date(a.date);
+            });
+            
+            // Add rows to table
+            sortedData.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.formatted_date}</td>
+                    <td>${item.max_weight} kg</td>
+                    <td>${Math.round(item.total_weight)} kg</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+        
+        // Initialize progress database
+        if (document.getElementById('exercise-progress-list')) {
+            loadExerciseList();
         }
     });
 </script>
@@ -1110,6 +1534,207 @@
         .popup-exercises {
             max-height: 50vh;
         }
+    }
+    
+    /* Progress Database Styles */
+    .progress-database {
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        gap: 1.5rem;
+        background-color: var(--card-bg);
+        border-radius: 0.5rem;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+    
+    @media (max-width: 768px) {
+        .progress-database {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    .exercise-list {
+        background-color: var(--card-bg);
+        height: 600px;
+        display: flex;
+        flex-direction: column;
+        border-right: 1px solid var(--border-color);
+    }
+    
+    .progress-search-bar {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .progress-search-input {
+        width: 100%;
+        padding: 0.5rem 1rem;
+        border-radius: 1.5rem;
+        border: 1px solid var(--border-color);
+        background-color: var(--card-bg);
+        font-size: 0.9rem;
+    }
+    
+    .exercise-list-items {
+        flex-grow: 1;
+        overflow-y: auto;
+        padding: 0.5rem 0;
+    }
+    
+    .exercise-groups {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .exercise-group {
+        margin-bottom: 1rem;
+    }
+    
+    .muscle-group-heading {
+        padding: 0.5rem 1rem;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        margin: 0;
+        font-weight: 600;
+    }
+    
+    .exercise-items {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .exercise-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .exercise-item:hover {
+        background-color: rgba(0, 0, 0, 0.03);
+    }
+    
+    .exercise-item.selected {
+        background-color: rgba(76, 175, 80, 0.1);
+        border-left: 3px solid #4caf50;
+    }
+    
+    .exercise-name {
+        font-size: 0.9rem;
+        flex-grow: 1;
+    }
+    
+    .exercise-item i {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+    
+    .loading-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+        color: var(--text-muted);
+    }
+    
+    .loading-state i {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+    }
+    
+    .exercise-details {
+        background-color: var(--card-bg);
+        padding: 1.5rem;
+        height: 600px;
+        overflow-y: auto;
+    }
+    
+    .exercise-details-empty {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .exercise-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+    
+    .exercise-header h3 {
+        margin: 0;
+        font-size: 1.5rem;
+    }
+    
+    .chart-container {
+        height: 250px;
+        margin-bottom: 1.5rem;
+    }
+    
+    .progress-stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .progress-stat {
+        background-color: rgba(0, 0, 0, 0.03);
+        border-radius: 0.5rem;
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+    
+    .stat-label {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-value {
+        font-size: 1.2rem;
+        font-weight: 600;
+    }
+    
+    .workout-history h4 {
+        margin-bottom: 1rem;
+    }
+    
+    .history-table-container {
+        overflow-x: auto;
+    }
+    
+    .history-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .history-table th, 
+    .history-table td {
+        padding: 0.75rem 1rem;
+        text-align: left;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .history-table th {
+        font-weight: 600;
+        color: var(--text-muted);
+        font-size: 0.9rem;
+    }
+    
+    .exercise-details-content.loading {
+        opacity: 0.6;
+        pointer-events: none;
     }
 </style>
 {% endblock %}
