@@ -39,17 +39,18 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/layout.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-nav.css') }}">
     {% block extra_css %}{% endblock %}
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body class="flex flex-col min-h-screen bg-gray-50">
+<body class="flex flex-col min-h-screen bg-gray-50 {% if request.endpoint == 'main.dashboard' %}dashboard-page{% endif %}">
     <header class="bg-gradient-to-r from-indigo-600 to-blue-500 text-white shadow-md">
         <nav class="container mx-auto px-4 py-3">
             <div class="flex justify-between items-center">
                 <!-- App Logo - Always visible -->
-                <a href="{{ url_for('main.index') }}" class="text-xl font-bold flex items-center">
-                    <i class="fas fa-dumbbell mr-2"></i>
+                <a href="{{ url_for('main.index') }}" class="app-logo">
+                    <i class="fas fa-dumbbell"></i>
                     <span>Groei App</span>
                 </a>
 
@@ -70,31 +71,45 @@
                     {% endif %}
                 </div>
                 
-                <!-- Mobile menu button - ONLY shows on mobile -->
-                <button id="mobile-menu-button" class="md:hidden p-2 rounded focus:outline-none">
+                <!-- Mobile menu button - Shows on mobile only -->
+                <button id="mobile-menu-button" class="md:hidden p-2 rounded focus:outline-none" aria-label="Toggle navigation menu">
                     <i class="fas fa-bars text-white text-xl"></i>
                 </button>
             </div>
         </nav>
         
-        <!-- Mobile Navigation Dropdown - ONLY shows when toggled -->
-        <div id="mobile-menu" class="hidden py-2 bg-indigo-700 md:hidden">
+        <!-- Mobile Navigation Dropdown - Shows when toggled -->
+        <div id="mobile-menu" class="hidden py-3 bg-indigo-700 shadow-lg md:hidden">
             <div class="container mx-auto px-4">
                 {% if current_user.is_authenticated %}
-                    <div class="flex flex-col space-y-3">
-                        <a href="{{ url_for('main.dashboard') }}" class="block py-2 border-b border-indigo-600">Dashboard</a>
-                        <a href="{{ url_for('workout.exercise_list') }}" class="block py-2 border-b border-indigo-600">Exercises</a>
-                        <a href="{{ url_for('workout.new_workout') }}" class="block py-2 border-b border-indigo-600">
-                            <i class="fas fa-plus mr-1"></i> New Workout
+                    <div class="mobile-nav-container">
+                        <a href="{{ url_for('main.dashboard') }}" class="mobile-nav-item">
+                            <i class="fas fa-tachometer-alt mr-2"></i>
+                            <span>Dashboard</span>
                         </a>
-                        <a href="{{ url_for('auth.logout') }}" class="block py-2">
-                            <i class="fas fa-sign-out-alt mr-1"></i> Logout
+                        <a href="{{ url_for('workout.exercise_list') }}" class="mobile-nav-item">
+                            <i class="fas fa-dumbbell mr-2"></i>
+                            <span>Exercises</span>
+                        </a>
+                        <a href="{{ url_for('workout.new_workout') }}" class="mobile-nav-item mobile-nav-highlight">
+                            <i class="fas fa-plus mr-2"></i>
+                            <span>New Workout</span>
+                        </a>
+                        <a href="{{ url_for('auth.logout') }}" class="mobile-nav-item">
+                            <i class="fas fa-sign-out-alt mr-2"></i>
+                            <span>Logout</span>
                         </a>
                     </div>
                 {% else %}
-                    <div class="flex flex-col space-y-3">
-                        <a href="{{ url_for('auth.login') }}" class="block py-2 border-b border-indigo-600">Login</a>
-                        <a href="{{ url_for('auth.register') }}" class="block py-2">Sign Up</a>
+                    <div class="mobile-nav-container">
+                        <a href="{{ url_for('auth.login') }}" class="mobile-nav-item">
+                            <i class="fas fa-sign-in-alt mr-2"></i>
+                            <span>Login</span>
+                        </a>
+                        <a href="{{ url_for('auth.register') }}" class="mobile-nav-item mobile-nav-highlight">
+                            <i class="fas fa-user-plus mr-2"></i>
+                            <span>Sign Up</span>
+                        </a>
                     </div>
                 {% endif %}
             </div>
@@ -153,9 +168,46 @@
             const mobileMenuButton = document.getElementById('mobile-menu-button');
             const mobileMenu = document.getElementById('mobile-menu');
             
+            // Check for duplicate mobile menus and remove them
+            const allMobileMenus = document.querySelectorAll('.mobile-menu-duplicate, .mobile-nav');
+            allMobileMenus.forEach(menu => {
+                if (menu.id !== 'mobile-menu') {
+                    menu.remove();
+                }
+            });
+            
             if (mobileMenuButton && mobileMenu) {
-                mobileMenuButton.addEventListener('click', function() {
+                // Toggle mobile menu visibility
+                mobileMenuButton.addEventListener('click', function(e) {
+                    e.preventDefault();
                     mobileMenu.classList.toggle('hidden');
+                    
+                    // Add active class to button when menu is open
+                    this.classList.toggle('active');
+                    
+                    // Close menu when clicking outside
+                    if (!mobileMenu.classList.contains('hidden')) {
+                        document.addEventListener('click', closeMenuOutside);
+                    } else {
+                        document.removeEventListener('click', closeMenuOutside);
+                    }
+                });
+                
+                // Function to close menu when clicking outside
+                function closeMenuOutside(event) {
+                    if (!mobileMenu.contains(event.target) && !mobileMenuButton.contains(event.target)) {
+                        mobileMenu.classList.add('hidden');
+                        mobileMenuButton.classList.remove('active');
+                        document.removeEventListener('click', closeMenuOutside);
+                    }
+                }
+                
+                // Close menu when pressing escape key
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && !mobileMenu.classList.contains('hidden')) {
+                        mobileMenu.classList.add('hidden');
+                        mobileMenuButton.classList.remove('active');
+                    }
                 });
             }
         });
