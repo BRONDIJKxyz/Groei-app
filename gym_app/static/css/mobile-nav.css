@@ -1,105 +1,144 @@
-/* mobile-nav.css - Mobile navigation styles */
+/* mobile-nav.css - Clean header and mobile navigation styles */
 
-/* Mobile Navigation */
-.mobile-nav-container {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 0.75rem;
-  padding: 0.5rem 0;
+:root {
+  --primary: #4f46e5; /* Indigo */
+  --primary-dark: #4338ca;
+  --success: #22c55e; /* Green */
+  --success-dark: #16a34a;
+  --light-bg: rgba(255, 255, 255, 0.1);
+  --light-bg-hover: rgba(255, 255, 255, 0.2);
+  --border-light: rgba(255, 255, 255, 0.15);
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --header-height: 60px;
+  --transition: all 0.2s ease;
 }
 
-.mobile-nav-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 0.75rem;
-  border-radius: 0.5rem;
-  background-color: rgba(255, 255, 255, 0.1);
-  color: white;
-  text-align: center;
-  transition: all 0.2s ease;
-}
-
-.mobile-nav-item i {
-  font-size: 1.25rem;
-  margin-bottom: 0.5rem;
-}
-
-.mobile-nav-item span {
-  font-size: 0.85rem;
-  font-weight: 500;
-}
-
-.mobile-nav-item:hover {
-  background-color: rgba(255, 255, 255, 0.2);
-}
-
-.mobile-nav-highlight {
-  background-color: var(--color-success);
-}
-
-.mobile-nav-highlight:hover {
-  background-color: #1ca64a;
-}
-
-/* Improved mobile navigation for dashboard page */
-.dashboard-page .dashboard-container > nav,
-.dashboard-page .dashboard-container > .mobile-nav,
-.dashboard-page .mobile-menu-duplicate,
-.dashboard-page .secondary-nav {
-  display: none !important;
-}
-
-/* Fix excessive padding on dashboard page when on mobile */
-@media (max-width: 768px) {
-  .dashboard-page main {
-    padding-top: 0.5rem;
-  }
-  
-  .dashboard-page .dashboard-container {
-    padding-top: 0;
-  }
-  
-  /* Clean up the header on mobile for dashboard */
-  .dashboard-page .dashboard-top {
-    margin-bottom: 0.5rem;
-  }
-}
-
-/* Makes the app title and logo more prominent */
+/* App Logo Styles */
 .app-logo {
   display: flex;
   align-items: center;
   font-weight: 700;
-  font-size: 1.25rem;
+  font-size: 1.2rem;
+  color: white;
+  letter-spacing: 0.5px;
 }
 
 .app-logo i {
   margin-right: 0.5rem;
+  font-size: 1.3rem;
 }
 
-/* Mobile menu button improvements */
-#mobile-menu-button {
-  background-color: rgba(255, 255, 255, 0.1);
-  width: 40px;
-  height: 40px;
+/* Main Navigation (Desktop) */
+.main-nav {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+.nav-item {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  color: white;
+  font-weight: 500;
+  transition: var(--transition);
+  border-radius: 0.25rem;
+  margin-right: 0.5rem;
+}
+
+.nav-item:hover {
+  background-color: var(--light-bg-hover);
+}
+
+.nav-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 25px;
+  height: 3px;
+  background-color: white;
+  border-radius: 3px;
+}
+
+/* Action Buttons */
+.action-button {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  font-weight: 500;
+  transition: var(--transition);
+  margin-left: 0.5rem;
+}
+
+.action-button i {
+  margin-right: 0.5rem;
+}
+
+.primary-action {
+  background-color: var(--success);
+  color: white;
+}
+
+.primary-action:hover {
+  background-color: var(--success-dark);
+}
+
+.secondary-action {
+  background-color: var(--light-bg);
+  color: white;
+}
+
+.secondary-action:hover {
+  background-color: var(--light-bg-hover);
+}
+
+/* Mobile Navigation */
+.mobile-primary-action {
   display: flex;
   align-items: center;
   justify-content: center;
+  background-color: var(--success);
+  color: white;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  transition: all 0.2s ease;
+  transition: var(--transition);
 }
 
-#mobile-menu-button:hover {
-  background-color: rgba(255, 255, 255, 0.2);
+.mobile-primary-action:hover {
+  background-color: var(--success-dark);
 }
 
-/* Enhanced mobile menu with better visuals */
+.mobile-menu-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--light-bg);
+  color: white;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  transition: var(--transition);
+  border: none;
+  cursor: pointer;
+}
+
+.mobile-menu-toggle:hover,
+.mobile-menu-toggle.active {
+  background-color: var(--light-bg-hover);
+}
+
+/* Mobile Menu Dropdown */
 #mobile-menu {
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: white;
+  box-shadow: var(--shadow);
+  border-top: 1px solid var(--border-light);
   animation: slideDown 0.2s ease-out;
+  overflow: hidden;
 }
 
 @keyframes slideDown {
@@ -113,20 +152,114 @@
   }
 }
 
-/* Media queries for responsive adjustments */
-@media (max-width: 640px) {
-  .mobile-nav-container {
-    grid-template-columns: 1fr;
+.mobile-menu-container {
+  padding: 0;
+}
+
+.mobile-nav {
+  display: flex;
+  flex-direction: column;
+}
+
+.mobile-nav-item {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  color: #1f2937; /* Dark gray text */
+  border-bottom: 1px solid #f3f4f6; /* Light gray border */
+  transition: var(--transition);
+}
+
+.mobile-nav-item i {
+  width: 24px;
+  font-size: 1rem;
+  margin-right: 0.75rem;
+  color: #6b7280; /* Medium gray for icons */
+}
+
+.mobile-nav-item span {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.mobile-nav-item:hover {
+  background-color: #f9fafb;
+}
+
+.mobile-nav-item.active {
+  background-color: #f3f4f6;
+  color: var(--primary);
+}
+
+.mobile-nav-item.active i {
+  color: var(--primary);
+}
+
+/* Dashboard Page Specific Fixes */
+/* Hide all duplicate navigation elements in dashboard */
+.dashboard-page #new-workout-duplicate,
+.dashboard-page .dashboard-container > nav,
+.dashboard-page .dashboard-container > .mobile-nav,
+.dashboard-page .secondary-nav,
+.dashboard-page .dashboard-duplicate-nav,
+.dashboard-page .dashboard-container > a[href*="new_workout"],
+.dashboard-page .dashboard-container > .btn-primary,
+.dashboard-page .dashboard-container > .new-workout-btn,
+.mobile-hidden,
+.duplicate-new-workout-btn {
+  display: none !important;
+}
+
+/* Fix mobile header spacing */
+@media (max-width: 768px) {
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
   }
   
-  .mobile-nav-item {
-    flex-direction: row;
-    justify-content: flex-start;
-    padding: 0.75rem 1rem;
+  /* Prevent any fixed postion elements that could overlap */
+  .mobile-fixed,
+  .mobile-fixed-button {
+    position: relative !important;
+    bottom: auto !important;
+    left: auto !important;
+    right: auto !important;
+  }
+}
+
+/* Fix excessive padding on dashboard page when on mobile */
+@media (max-width: 768px) {
+  .dashboard-page main {
+    padding-top: 0.5rem;
   }
   
-  .mobile-nav-item i {
-    margin-bottom: 0;
-    margin-right: 0.75rem;
+  .dashboard-page .dashboard-container {
+    padding-top: 0;
+  }
+  
+  /* Clean up the dashboard stats display on mobile */
+  .stat-cards {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+  
+  .stat-card {
+    padding: 0.75rem;
+  }
+  
+  .stat-icon {
+    width: 35px;
+    height: 35px;
+  }
+  
+  .stat-value {
+    font-size: 1.25rem;
+  }
+  
+  .stat-label {
+    font-size: 0.75rem;
   }
 }

@@ -54,63 +54,83 @@
                     <span>Groei App</span>
                 </a>
 
-                <!-- Desktop Navigation - HIDDEN on mobile -->
+                <!-- Main Navigation Links -->
+                <div class="flex-grow mx-4 md:flex hidden">
+                    {% if current_user.is_authenticated %}
+                        <div class="main-nav">
+                            <a href="{{ url_for('main.dashboard') }}" class="nav-item {% if request.endpoint == 'main.dashboard' %}active{% endif %}">
+                                <span>Dashboard</span>
+                            </a>
+                            <a href="{{ url_for('workout.exercise_list') }}" class="nav-item {% if request.endpoint == 'workout.exercise_list' %}active{% endif %}">
+                                <span>Exercises</span>
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Action Buttons (Desktop) -->
                 <div class="hidden md:flex md:items-center">
                     {% if current_user.is_authenticated %}
-                        <a href="{{ url_for('main.dashboard') }}" class="px-3 py-2 rounded hover:bg-blue-700 transition mr-1">Dashboard</a>
-                        <a href="{{ url_for('workout.exercise_list') }}" class="px-3 py-2 rounded hover:bg-blue-700 transition mr-1">Exercises</a>
-                        <a href="{{ url_for('workout.new_workout') }}" class="px-3 py-2 bg-green-600 rounded hover:bg-green-700 transition mr-1">
-                            <i class="fas fa-plus mr-1"></i> New Workout
+                        <a href="{{ url_for('workout.new_workout') }}" class="action-button primary-action">
+                            <i class="fas fa-plus"></i>
+                            <span>New Workout</span>
                         </a>
-                        <a href="{{ url_for('auth.logout') }}" class="px-3 py-2 rounded hover:bg-blue-700 transition">
-                            <i class="fas fa-sign-out-alt mr-1"></i> Logout
+                        <a href="{{ url_for('auth.logout') }}" class="action-button secondary-action">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Logout</span>
                         </a>
                     {% else %}
-                        <a href="{{ url_for('auth.login') }}" class="px-3 py-2 rounded hover:bg-blue-700 transition mr-1">Login</a>
-                        <a href="{{ url_for('auth.register') }}" class="px-3 py-2 bg-green-600 rounded hover:bg-green-700 transition">Sign Up</a>
+                        <a href="{{ url_for('auth.login') }}" class="action-button secondary-action">Login</a>
+                        <a href="{{ url_for('auth.register') }}" class="action-button primary-action">Sign Up</a>
                     {% endif %}
                 </div>
                 
-                <!-- Mobile menu button - Shows on mobile only -->
-                <button id="mobile-menu-button" class="md:hidden p-2 rounded focus:outline-none" aria-label="Toggle navigation menu">
-                    <i class="fas fa-bars text-white text-xl"></i>
-                </button>
+                <!-- Mobile action button and menu toggle -->
+                <div class="md:hidden flex items-center">
+                    {% if current_user.is_authenticated %}
+                        <!-- Primary action - New Workout -->
+                        <a href="{{ url_for('workout.new_workout') }}" class="mobile-primary-action mr-2">
+                            <i class="fas fa-plus"></i>
+                        </a>
+                    {% endif %}
+                    
+                    <!-- Mobile menu button -->
+                    <button id="mobile-menu-button" class="mobile-menu-toggle" aria-label="Toggle navigation menu">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                </div>
             </div>
         </nav>
         
         <!-- Mobile Navigation Dropdown - Shows when toggled -->
-        <div id="mobile-menu" class="hidden py-3 bg-indigo-700 shadow-lg md:hidden">
-            <div class="container mx-auto px-4">
+        <div id="mobile-menu" class="hidden py-0 shadow-lg md:hidden">
+            <div class="mobile-menu-container">
                 {% if current_user.is_authenticated %}
-                    <div class="mobile-nav-container">
-                        <a href="{{ url_for('main.dashboard') }}" class="mobile-nav-item">
-                            <i class="fas fa-tachometer-alt mr-2"></i>
+                    <nav class="mobile-nav">
+                        <a href="{{ url_for('main.dashboard') }}" class="mobile-nav-item {% if request.endpoint == 'main.dashboard' %}active{% endif %}">
+                            <i class="fas fa-tachometer-alt"></i>
                             <span>Dashboard</span>
                         </a>
-                        <a href="{{ url_for('workout.exercise_list') }}" class="mobile-nav-item">
-                            <i class="fas fa-dumbbell mr-2"></i>
+                        <a href="{{ url_for('workout.exercise_list') }}" class="mobile-nav-item {% if request.endpoint == 'workout.exercise_list' %}active{% endif %}">
+                            <i class="fas fa-dumbbell"></i>
                             <span>Exercises</span>
                         </a>
-                        <a href="{{ url_for('workout.new_workout') }}" class="mobile-nav-item mobile-nav-highlight">
-                            <i class="fas fa-plus mr-2"></i>
-                            <span>New Workout</span>
-                        </a>
                         <a href="{{ url_for('auth.logout') }}" class="mobile-nav-item">
-                            <i class="fas fa-sign-out-alt mr-2"></i>
+                            <i class="fas fa-sign-out-alt"></i>
                             <span>Logout</span>
                         </a>
-                    </div>
+                    </nav>
                 {% else %}
-                    <div class="mobile-nav-container">
+                    <nav class="mobile-nav">
                         <a href="{{ url_for('auth.login') }}" class="mobile-nav-item">
-                            <i class="fas fa-sign-in-alt mr-2"></i>
+                            <i class="fas fa-sign-in-alt"></i>
                             <span>Login</span>
                         </a>
-                        <a href="{{ url_for('auth.register') }}" class="mobile-nav-item mobile-nav-highlight">
-                            <i class="fas fa-user-plus mr-2"></i>
+                        <a href="{{ url_for('auth.register') }}" class="mobile-nav-item">
+                            <i class="fas fa-user-plus"></i>
                             <span>Sign Up</span>
                         </a>
-                    </div>
+                    </nav>
                 {% endif %}
             </div>
         </div>
@@ -161,6 +181,7 @@
 
     <!-- JavaScript -->
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/clean-navigation.js') }}"></script>
     
     <!-- Mobile menu toggle script -->
     <script>
