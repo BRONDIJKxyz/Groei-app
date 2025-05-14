@@ -100,7 +100,14 @@
                         <p id="popup-exercise-count">5 exercises</p>
                     </div>
                     <div id="popup-exercises" class="popup-exercises">
-                        <!-- Exercise details will be populated by JavaScript -->
+                        <!-- Exercise details will be populated by JavaScript in the format:
+                        
+                        Romanian deadlift                             3600 kg
+                        15x80.0kg, 15x80.0kg, 15x80.0kg
+                        
+                        Barbell Deadlift                             3200 kg
+                        8x100.0kg, 8x100.0kg, 8x100.0kg, 8x100.0kg
+                        -->
                     </div>
                 </div>
             </div>
@@ -503,38 +510,46 @@
             
             if (workoutData.workout_exercises) {
                 workoutData.workout_exercises.forEach(exercise => {
-                    // Create exercise item
+                    // Create exercise item container
                     const exerciseItem = document.createElement('div');
-                    exerciseItem.className = 'exercise-item';
+                    exerciseItem.className = 'exercise-popup-item';
                     
-                    // Exercise name and total weight
-                    const nameDiv = document.createElement('div');
-                    nameDiv.className = 'exercise-name';
+                    // Exercise heading row with name and total weight
+                    const exerciseHeader = document.createElement('div');
+                    exerciseHeader.className = 'exercise-popup-header';
                     
-                    const nameHeading = document.createElement('h5');
-                    nameHeading.textContent = exercise.exercise_name || 'Unknown Exercise';
+                    // Exercise name
+                    const exerciseName = document.createElement('h5');
+                    exerciseName.className = 'exercise-popup-name';
+                    exerciseName.textContent = exercise.exercise_name || 'Unknown Exercise';
+                    exerciseHeader.appendChild(exerciseName);
                     
-                    const weightSpan = document.createElement('span');
+                    // Total weight
+                    const totalWeightEl = document.createElement('span');
+                    totalWeightEl.className = 'exercise-popup-total';
                     const totalWeight = exercise.total_weight || 0;
-                    weightSpan.textContent = `${Math.round(totalWeight)} kg`;
+                    totalWeightEl.textContent = `${Math.round(totalWeight)} kg`;
+                    exerciseHeader.appendChild(totalWeightEl);
                     
-                    nameDiv.appendChild(nameHeading);
-                    nameDiv.appendChild(weightSpan);
-                    
-                    // Exercise sets
+                    // Exercise sets - formatted as shown in the image
                     const setsDiv = document.createElement('div');
-                    setsDiv.className = 'exercise-sets';
+                    setsDiv.className = 'exercise-popup-sets';
                     
-                    // Format sets
+                    // Format sets like: 15x80.0kg, 15x80.0kg, 15x80.0kg
                     if (exercise.sets && exercise.sets.length > 0) {
-                        const setsText = exercise.sets.map(set => `${set.reps}x${set.weight.toFixed(1)}kg`).join(', ');
+                        const setsText = exercise.sets.map(set => {
+                            // Format weight with 1 decimal place if it has decimals, otherwise as integer
+                            const weightDisplay = Number.isInteger(set.weight) ? 
+                                set.weight : set.weight.toFixed(1);
+                            return `${set.reps}x${weightDisplay}kg`;
+                        }).join(', ');
                         setsDiv.textContent = setsText;
                     } else {
                         setsDiv.textContent = 'No sets recorded';
                     }
                     
-                    // Add to exercise item
-                    exerciseItem.appendChild(nameDiv);
+                    // Add components to the exercise item
+                    exerciseItem.appendChild(exerciseHeader);
                     exerciseItem.appendChild(setsDiv);
                     
                     // Add to popup
@@ -619,7 +634,7 @@
                     let uniqueExercises = {};
                     
                     // Only show exercises that appear in workout data
-                    fetch('/workout/api/active_workouts')
+                    fetch('/workout/api/active-workouts')
                         .then(response => response.json())
                         .then(workoutData => {
                             const exerciseIds = new Set();
