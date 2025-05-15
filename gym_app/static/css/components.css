@@ -13,6 +13,13 @@
   border: none;
 }
 
+.nav-link, .nav-login {
+  color: #111 !important;
+  font-weight: 500;
+  margin: 0 8px;
+  transition: color 0.2s;
+}
+
 .btn-primary {
   background-color: var(--color-primary);
   color: white;
