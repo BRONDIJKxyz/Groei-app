@@ -366,13 +366,28 @@ def api_exercises_with_progress():
             .filter(
                 Workout.user_id == current_user.id,
                 WorkoutExercise.completed == True,
-                WorkoutExercise._sets_data != '[]'  # Only exercises with sets data
+                WorkoutExercise._sets_data != '[]',  # Only exercises with sets data
+                WorkoutExercise._sets_data != '[{}]'  # Exclude empty set data
             )\
             .distinct()\
             .all()
+            
+        # If no exercises found, try a less restrictive query
+        if len(exercise_ids_with_progress) == 0:
+            print("DEBUG: No exercises found with strict criteria, trying less restrictive query")
+            exercise_ids_with_progress = db.session.query(WorkoutExercise.exercise_id)\
+                .join(Workout)\
+                .filter(
+                    Workout.user_id == current_user.id
+                )\
+                .distinct()\
+                .all()
         
         # Convert to flat list
         exercise_ids = [id[0] for id in exercise_ids_with_progress]
+        
+        print(f"DEBUG: Found {len(exercise_ids)} exercises with progress data for user {current_user.id}")
+        print(f"DEBUG: Exercise IDs with progress: {exercise_ids}")
         
         # Get the full exercise details for these IDs
         exercises = Exercise.query.filter(Exercise.id.in_(exercise_ids)).all()

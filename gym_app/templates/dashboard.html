@@ -627,6 +627,10 @@
             fetch('/workout/api/exercises/with-progress')
                 .then(response => response.json())
                 .then(data => {
+                    // Debug output
+                    console.log('API response from with-progress endpoint:', data);
+                    console.log('Number of exercises with progress:', data.length);
+                    
                     // Clear loading state
                     loadingState.style.display = 'none';
                     
