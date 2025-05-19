@@ -623,82 +623,77 @@
             const exerciseItems = exerciseList.querySelector('.exercise-list-items');
             const loadingState = exerciseItems.querySelector('.loading-state');
             
-            // Get all exercises the user has done
-            fetch('/workout/api/exercises')
+            // Get only exercises with progress data (completed workout data)
+            fetch('/workout/api/exercises/with-progress')
                 .then(response => response.json())
                 .then(data => {
                     // Clear loading state
                     loadingState.style.display = 'none';
                     
-                    // Process exercises
-                    let uniqueExercises = {};
+                    // If no exercises with progress data
+                    if (data.length === 0) {
+                        const emptyState = document.createElement('div');
+                        emptyState.classList.add('empty-state');
+                        emptyState.innerHTML = `
+                            <i class="fas fa-dumbbell"></i>
+                            <p>No exercise progress data available yet. Complete exercises to see progress!</p>
+                        `;
+                        exerciseItems.innerHTML = '';
+                        exerciseItems.appendChild(emptyState);
+                        return;
+                    }
+
+                    // Sort by muscle group then name
+                    const usedExercises = data;
+                    usedExercises.sort((a, b) => {
+                        if (a.muscle_group === b.muscle_group) {
+                            return a.name.localeCompare(b.name);
+                        }
+                        return a.muscle_group.localeCompare(b.muscle_group);
+                    });
                     
-                    // Only show exercises that appear in workout data
-                    fetch('/workout/api/active-workouts')
-                        .then(response => response.json())
-                        .then(workoutData => {
-                            const exerciseIds = new Set();
-                            
-                            // Extract all exercise IDs from workout data
-                            workoutData.forEach(workout => {
-                                workout.exercises.forEach(exercise => {
-                                    exerciseIds.add(exercise.exercise_id);
-                                });
-                            });
-                            
-                            // Filter exercises to only include those found in workouts
-                            const usedExercises = data.filter(exercise => exerciseIds.has(exercise.id));
-                            
-                            // Sort by muscle group then name
-                            usedExercises.sort((a, b) => {
-                                if (a.muscle_group === b.muscle_group) {
-                                    return a.name.localeCompare(b.name);
-                                }
-                                return a.muscle_group.localeCompare(b.muscle_group);
-                            });
-                            
-                            // Group by muscle group
-                            const muscleGroups = {};
-                            usedExercises.forEach(exercise => {
-                                if (!muscleGroups[exercise.muscle_group]) {
-                                    muscleGroups[exercise.muscle_group] = [];
-                                }
-                                muscleGroups[exercise.muscle_group].push(exercise);
-                            });
-                            
-                            // Create HTML
-                            let html = '';
-                            Object.keys(muscleGroups).sort().forEach(muscleGroup => {
-                                html += `
-                                    <div class="exercise-group">
-                                        <h4 class="muscle-group-heading">${muscleGroup.charAt(0).toUpperCase() + muscleGroup.slice(1)}</h4>
-                                        <div class="exercise-items">
-                                `;
-                                
-                                muscleGroups[muscleGroup].forEach(exercise => {
-                                    html += `
-                                        <div class="exercise-item" data-exercise-id="${exercise.id}" data-name="${exercise.name}" data-muscle="${exercise.muscle_group}">
-                                            <span class="exercise-name">${exercise.name}</span>
-                                            <i class="fas fa-chevron-right"></i>
-                                        </div>
-                                    `;
-                                });
-                                
-                                html += `
-                                        </div>
-                                    </div>
-                                `;
-                            });
-                            
-                            // Add to DOM
-                            const exercisesContainer = document.createElement('div');
-                            exercisesContainer.classList.add('exercise-groups');
-                            exercisesContainer.innerHTML = html;
-                            exerciseItems.appendChild(exercisesContainer);
-                            
-                            // Add click handlers
-                            const exerciseElements = exerciseItems.querySelectorAll('.exercise-item');
-                            exerciseElements.forEach(element => {
+                    // Group by muscle group
+                    const muscleGroups = {};
+                    usedExercises.forEach(exercise => {
+                        if (!muscleGroups[exercise.muscle_group]) {
+                            muscleGroups[exercise.muscle_group] = [];
+                        }
+                        muscleGroups[exercise.muscle_group].push(exercise);
+                    });
+                    
+                    // Create HTML
+                    let html = '';
+                    Object.keys(muscleGroups).sort().forEach(muscleGroup => {
+                        html += `
+                            <div class="exercise-group">
+                                <h4 class="muscle-group-heading">${muscleGroup.charAt(0).toUpperCase() + muscleGroup.slice(1)}</h4>
+                                <div class="exercise-items">
+                        `;
+                        
+                        muscleGroups[muscleGroup].forEach(exercise => {
+                            html += `
+                                <div class="exercise-item" data-exercise-id="${exercise.id}" data-name="${exercise.name}" data-muscle="${exercise.muscle_group}">
+                                    <span class="exercise-name">${exercise.name}</span>
+                                    <i class="fas fa-chevron-right"></i>
+                                </div>
+                            `;
+                        });
+                        
+                        html += `
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    // Add to DOM
+                    const exercisesContainer = document.createElement('div');
+                    exercisesContainer.classList.add('exercise-groups');
+                    exercisesContainer.innerHTML = html;
+                    exerciseItems.appendChild(exercisesContainer);
+                    
+                    // Add click handlers
+                    const exerciseElements = exerciseItems.querySelectorAll('.exercise-item');
+                    exerciseElements.forEach(element => {
                                 element.addEventListener('click', function() {
                                     const exerciseId = this.getAttribute('data-exercise-id');
                                     const exerciseName = this.getAttribute('data-name');

@@ -332,24 +332,66 @@ def delete_set(workout_id, exercise_id, set_index):
         flash(f"Error removing set: {str(e)}", 'error')
         return redirect(url_for('workout.session', workout_id=workout_id))
 
-# API Routes for AJAX functionality
 @workout_bp.route('/api/exercises')
 @login_required
 def api_exercises():
     """API endpoint to get all exercises."""
-    exercises = Exercise.query.all()
-    
-    result = []
-    for exercise in exercises:
-        result.append({
-            'id': exercise.id,
-            'name': exercise.name,
-            'muscle_group': exercise.muscle_group,
-            'description': exercise.description,
-            'image_url': exercise.image_url
-        })
-    
-    return jsonify({'exercises': result})
+    try:
+        # Sort by muscle group, then by name
+        exercises = Exercise.query.all()
+        
+        # Serialize
+        result = []
+        for exercise in exercises:
+            result.append({
+                'id': exercise.id,
+                'name': exercise.name,
+                'muscle_group': exercise.muscle_group,
+                'equipment': exercise.equipment,
+                'is_compound': exercise.is_compound,
+            })
+        
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'error': str(e)})
+
+@workout_bp.route('/api/exercises/with-progress')
+@login_required
+def api_exercises_with_progress():
+    """API endpoint to get only exercises with progress data (completed sets)."""
+    try:
+        # Get exercise IDs that have completed workout data
+        exercise_ids_with_progress = db.session.query(WorkoutExercise.exercise_id)\
+            .join(Workout)\
+            .filter(
+                Workout.user_id == current_user.id,
+                WorkoutExercise.completed == True,
+                WorkoutExercise._sets_data != '[]'  # Only exercises with sets data
+            )\
+            .distinct()\
+            .all()
+        
+        # Convert to flat list
+        exercise_ids = [id[0] for id in exercise_ids_with_progress]
+        
+        # Get the full exercise details for these IDs
+        exercises = Exercise.query.filter(Exercise.id.in_(exercise_ids)).all()
+        
+        # Serialize
+        result = []
+        for exercise in exercises:
+            result.append({
+                'id': exercise.id,
+                'name': exercise.name,
+                'muscle_group': exercise.muscle_group,
+                'equipment': exercise.equipment,
+                'is_compound': exercise.is_compound,
+            })
+        
+        return jsonify(result)
+    except Exception as e:
+        print(f"Error fetching exercises with progress: {str(e)}")
+        return jsonify({'error': str(e)})
 
 @workout_bp.route('/api/exercises/<int:exercise_id>')
 @login_required
