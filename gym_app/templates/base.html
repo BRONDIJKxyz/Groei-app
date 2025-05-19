@@ -41,16 +41,17 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/layout.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-nav.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/workout-popup.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-fixes.css') }}">
     {% block extra_css %}{% endblock %}
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="flex flex-col min-h-screen bg-gray-50 {% if request.endpoint == 'main.dashboard' %}dashboard-page{% endif %}">
-    <header class="bg-gradient-to-r from-indigo-600 to-blue-500 text-white shadow-md">
+    <header class="bg-gradient-to-r from-indigo-600 to-blue-500 text-black shadow-md">
         <nav class="container mx-auto px-4 py-3">
             <div class="flex justify-between items-center">
                 <!-- App Logo - Always visible -->
-                <a href="{{ url_for('main.index') }}" class="app-logo">
+                <a href="{{ url_for('main.index') }}" class="app-logo text-black">
                     <i class="fas fa-dumbbell"></i>
                     <span>Groei App</span>
                 </a>
@@ -89,10 +90,19 @@
                 <!-- Mobile action button and menu toggle -->
                 <div class="md:hidden flex items-center">
                     {% if current_user.is_authenticated %}
-                        <!-- Primary action - New Workout -->
-                        <a href="{{ url_for('workout.new_workout') }}" class="mobile-primary-action mr-2">
-                            <i class="fas fa-plus"></i>
-                        </a>
+                        {% if request.endpoint == 'workout.view_workout' %}
+                            <!-- Primary action - Finish Workout when in workout view -->
+                            <form action="{{ url_for('workout.complete_workout', workout_id=workout.id) }}" method="POST" class="inline">
+                                <button type="submit" class="mobile-primary-action mr-2" title="Complete Workout">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                            </form>
+                        {% else %}
+                            <!-- Primary action - New Workout -->
+                            <a href="{{ url_for('workout.new_workout') }}" class="mobile-primary-action mr-2">
+                                <i class="fas fa-plus"></i>
+                            </a>
+                        {% endif %}
                     {% endif %}
                     
                     <!-- Mobile menu button -->

@@ -95,3 +95,11 @@ class WorkoutExercise(db.Model):
         if sets:
             return sets[-1]['weight']
         return 0
+        
+    @property
+    def last_set_reps(self):
+        """Get the reps from the last set."""
+        sets = self.sets_data
+        if sets:
+            return sets[-1]['reps']
+        return 8  # Default to 8 reps if no previous set

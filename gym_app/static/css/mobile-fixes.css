@@ -1,0 +1,59 @@
+/* Mobile fixes for Groei App */
+
+/* Fix new workout button position so it doesn't overlap content */
+@media (max-width: 768px) {
+  /* Add padding to the main container to prevent button overlap */
+  .workout-session-container {
+    padding-bottom: 70px !important; /* Space for the floating action button */
+  }
+  
+  /* Make the mobile-primary-action button fixed */
+  .mobile-primary-action {
+    z-index: 100;
+  }
+  
+  /* Compress the set cards for better mobile experience */
+  .set-card {
+    padding: 0.5rem;
+    margin-bottom: 0.25rem;
+    display: flex;
+    align-items: center;
+  }
+  
+  /* Make set details more compact */
+  .sets-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+  
+  .completed .sets-container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+  
+  .completed .set-card {
+    flex: 0 0 auto;
+    width: calc(33.333% - 0.25rem);
+    min-width: 80px;
+    max-width: 120px;
+    font-size: 0.85rem;
+  }
+
+  .completed .set-number {
+    font-size: 0.75rem;
+    width: 1rem;
+  }
+  
+  .completed .set-details {
+    font-size: 0.85rem;
+    gap: 0.25rem;
+    margin-left: 0.25rem;
+  }
+  
+  .completed .delete-set-form {
+    display: none;
+  }
+}
