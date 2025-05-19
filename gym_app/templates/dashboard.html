@@ -694,76 +694,66 @@
                     // Add click handlers
                     const exerciseElements = exerciseItems.querySelectorAll('.exercise-item');
                     exerciseElements.forEach(element => {
-                                element.addEventListener('click', function() {
-                                    const exerciseId = this.getAttribute('data-exercise-id');
-                                    const exerciseName = this.getAttribute('data-name');
-                                    const exerciseMuscle = this.getAttribute('data-muscle');
+                        element.addEventListener('click', function() {
+                            const exerciseId = this.getAttribute('data-exercise-id');
+                            const exerciseName = this.getAttribute('data-name');
+                            const exerciseMuscle = this.getAttribute('data-muscle');
+                            
+                            // Highlight selected exercise
+                            exerciseElements.forEach(el => el.classList.remove('selected'));
+                            this.classList.add('selected');
+                            
+                            // Load exercise details
+                            loadExerciseProgress(exerciseId, exerciseName, exerciseMuscle);
+                        });
+                    });
+                    
+                    // Setup search functionality
+                    const searchInput = document.getElementById('exercise-search');
+                    const emptyState = exerciseItems.querySelector('.exercise-list-empty');
+                    
+                    if (searchInput) {
+                        searchInput.addEventListener('input', function() {
+                            const query = this.value.toLowerCase();
+                            let matchFound = false;
+                            
+                            exerciseElements.forEach(element => {
+                                const name = element.getAttribute('data-name').toLowerCase();
+                                const muscle = element.getAttribute('data-muscle').toLowerCase();
+                                
+                                if (name.includes(query) || muscle.includes(query)) {
+                                    element.style.display = 'flex';
+                                    matchFound = true;
                                     
-                                    // Highlight selected exercise
-                                    exerciseElements.forEach(el => el.classList.remove('selected'));
-                                    this.classList.add('selected');
-                                    
-                                    // Load exercise details
-                                    loadExerciseProgress(exerciseId, exerciseName, exerciseMuscle);
-                                });
+                                    // Show parent group
+                                    let group = element.closest('.exercise-group');
+                                    if (group) {
+                                        group.style.display = 'block';
+                                    }
+                                } else {
+                                    element.style.display = 'none';
+                                }
                             });
                             
-                            // Setup search functionality
-                            const searchInput = document.getElementById('exercise-search');
-                            const emptyState = exerciseItems.querySelector('.exercise-list-empty');
-                            
-                            if (searchInput) {
-                                searchInput.addEventListener('input', function() {
-                                    const query = this.value.toLowerCase();
-                                    let matchFound = false;
-                                    
-                                    exerciseElements.forEach(element => {
-                                        const name = element.getAttribute('data-name').toLowerCase();
-                                        const muscle = element.getAttribute('data-muscle').toLowerCase();
-                                        
-                                        if (name.includes(query) || muscle.includes(query)) {
-                                            element.style.display = 'flex';
-                                            matchFound = true;
-                                            
-                                            // Show parent group
-                                            let group = element.closest('.exercise-group');
-                                            if (group) {
-                                                group.style.display = 'block';
-                                            }
-                                        } else {
-                                            element.style.display = 'none';
-                                        }
-                                    });
-                                    
-                                    // Handle no matches
-                                    if (matchFound) {
-                                        emptyState.style.display = 'none';
-                                        
-                                        // Hide empty groups
-                                        document.querySelectorAll('.exercise-group').forEach(group => {
-                                            const visibleItems = group.querySelectorAll('.exercise-item[style="display: flex"]');
-                                            if (visibleItems.length === 0) {
-                                                group.style.display = 'none';
-                                            }
-                                        });
-                                    } else {
-                                        emptyState.style.display = 'flex';
-                                        document.querySelectorAll('.exercise-group').forEach(group => {
-                                            group.style.display = 'none';
-                                        });
+                            // Show/hide empty state
+                            if (matchFound) {
+                                emptyState.style.display = 'none';
+                                
+                                // Show/hide muscle group headers that have no visible exercises
+                                document.querySelectorAll('.exercise-group').forEach(group => {
+                                    const visibleExercises = group.querySelectorAll('.exercise-item[style="display: flex"]');
+                                    if (visibleExercises.length === 0) {
+                                        group.style.display = 'none';
                                     }
                                 });
+                            } else {
+                                emptyState.style.display = 'flex';
+                                document.querySelectorAll('.exercise-group').forEach(group => {
+                                    group.style.display = 'none';
+                                });
                             }
-                        })
-                        .catch(error => {
-                            console.error('Error fetching workout data:', error);
-                            exerciseItems.innerHTML = `
-                                <div class="empty-state">
-                                    <i class="fas fa-exclamation-circle"></i>
-                                    <p>Error loading exercises. Please try again later.</p>
-                                </div>
-                            `;
                         });
+                    }
                 })
                 .catch(error => {
                     console.error('Error loading exercises:', error);
