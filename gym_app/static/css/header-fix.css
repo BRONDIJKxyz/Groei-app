@@ -1,0 +1,25 @@
+/* Fix for header text to ensure it's black */
+header.bg-gradient-to-r {
+  color: #000 !important;
+}
+
+header .app-logo,
+header .nav-item,
+header .main-nav a,
+header .action-button {
+  color: #000 !important;
+}
+
+/* Make sure hover states are visible */
+header .nav-item:hover,
+header .app-logo:hover {
+  color: #333 !important;
+  opacity: 0.9;
+}
+
+/* Ensure active state is visible */
+header .nav-item.active {
+  color: #000 !important;
+  font-weight: bold;
+  border-bottom: 2px solid #000;
+}
