@@ -48,12 +48,12 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body class="flex flex-col min-h-screen bg-gray-50 {% if request.endpoint == 'main.dashboard' %}dashboard-page{% endif %}">
-    <header class="bg-gradient-to-r from-indigo-600 to-blue-500 text-black shadow-md">
+<body class="flex flex-col min-h-screen {% if request.endpoint == 'main.dashboard' %}dashboard-page{% endif %}">
+    <header class="shadow-md" style="background-color: var(--color-bg-dark-secondary); color: var(--color-text-dark-primary);">
         <nav class="container mx-auto px-4 py-3">
             <div class="flex justify-between items-center">
                 <!-- App Logo - Always visible -->
-                <a href="{{ url_for('main.index') }}" class="app-logo text-black">
+                <a href="{{ url_for('main.index') }}" class="app-logo">
                     <i class="fas fa-dumbbell"></i>
                     <span>Groei App</span>
                 </a>

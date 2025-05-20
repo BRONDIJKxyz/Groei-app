@@ -1,77 +1,76 @@
-/* 
- * Workout Popup Styles
- * Styling for the workout summary popup shown when clicking on calendar days
- */
-
+/* Workout popup styles */
 .workout-popup {
-    display: none;
-    position: absolute;
-    z-index: 50;
-    background-color: #222;
-    border-radius: 10px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-    overflow: hidden;
-    width: 360px;
-    color: white;
-    transition: opacity 0.2s, transform 0.2s;
-    opacity: 0;
-    transform: translateY(10px);
+    background-color: var(--color-bg-dark-secondary); /* Was: #2D3748 */
+    color: var(--color-text-dark-primary); /* Was: #E2E8F0 */
+    border-radius: 8px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
     padding: 16px;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+    width: 320px; /* Adjusted width */
+    max-width: 90vw;
+    position: absolute; /* Managed by JS */
+    z-index: 1000;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    display: none; /* Initially hidden, JS adds .visible */
+    border: 1px solid var(--color-bg-dark-tertiary); /* Was: #4A5568 */
 }
 
 .workout-popup.visible {
     display: block;
-    opacity: 1;
-    transform: translateY(0);
 }
 
-.popup-header {
-    margin-bottom: 15px;
+.workout-popup .popup-header {
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--color-bg-dark-tertiary); /* Was: #4A5568 */
 }
 
-.popup-header h4 {
-    font-size: 1.25rem;
+.workout-popup #popup-date {
+    font-size: 1rem; /* 16px */
     font-weight: 600;
+    color: white; /* Remains white, good contrast */
+    margin: 0 0 4px 0;
+}
+
+.workout-popup #popup-exercise-count {
+    font-size: 0.875rem; /* 14px */
+    color: var(--color-text-dark-secondary); /* Was: #A0AEC0 */
     margin: 0;
-    padding: 0;
 }
 
-.popup-header p {
-    font-size: 1rem;
-    margin: 4px 0 0;
-    opacity: 0.7;
+.workout-popup .exercise-popup-item {
+    margin-bottom: 14px;
+}
+.workout-popup .exercise-popup-item:last-child {
+    margin-bottom: 0;
 }
 
-.popup-exercises {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
-.exercise-popup-item {
-    margin-bottom: 16px;
-}
-
-.exercise-popup-header {
+.workout-popup .exercise-popup-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 4px;
+    margin-bottom: 5px;
 }
 
-.exercise-popup-name {
-    font-size: 1.1rem;
+.workout-popup .exercise-popup-name {
+    font-size: 0.94rem; /* ~15px */
     font-weight: 500;
+    color: var(--color-text-dark-primary); /* Was: #CBD5E0 */
     margin: 0;
+    line-height: 1.3;
 }
 
-.exercise-popup-total {
-    font-size: 1.1rem;
+.workout-popup .exercise-popup-total {
+    font-size: 0.94rem;
     font-weight: 500;
+    color: var(--color-text-dark-primary); /* Was: #CBD5E0 */
+    white-space: nowrap;
+    margin-left: 8px;
 }
 
-.exercise-popup-sets {
-    font-size: 0.95rem;
-    color: rgba(255, 255, 255, 0.7);
+.workout-popup .exercise-popup-sets {
+    font-size: 0.8125rem; /* 13px */
+    color: var(--color-text-dark-secondary); /* Was: #A0AEC0 */
+    line-height: 1.5;
+    padding-left: 2px; /* Slight indent if desired, or remove */
 }
+/* End of Workout Popup Styles */
