@@ -436,20 +436,75 @@ def api_exercise_detail(exercise_id):
 @login_required
 def api_active_workouts():
     """API endpoint to get user's active (incomplete) workouts."""
-    workouts = Workout.query.filter_by(
-        user_id=current_user.id,
-        completed=False
-    ).order_by(Workout.date.desc()).all()
-    
-    result = []
-    for workout in workouts:
-        result.append({
-            'id': workout.id,
-            'date': workout.date.isoformat(),
-            'name': workout.name,
-        })
-    
-    return jsonify({'workouts': result})
+    try:
+        # Get user's active workouts
+        workouts = Workout.query.filter_by(
+            user_id=current_user.id,
+            completed=False
+        ).order_by(Workout.date.desc()).all()
+        
+        # Format for API response
+        result = []
+        for workout in workouts:
+            # Get exercises for this workout
+            exercises = WorkoutExercise.query.filter_by(workout_id=workout.id).all()
+            
+            # Format exercises for the response
+            workout_exercises = []
+            for exercise in exercises:
+                workout_exercises.append({
+                    'exercise_id': exercise.exercise_id,
+                    'name': exercise.exercise.name
+                })
+            
+            result.append({
+                'id': workout.id,
+                'date': workout.date.strftime('%Y-%m-%d'),
+                'name': workout.name,
+                'exercises': workout_exercises
+            })
+        
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'error': str(e)})
+
+@workout_bp.route('/api/completed-workouts')
+@login_required
+def api_completed_workouts():
+    """API endpoint to get user's completed workouts."""
+    try:
+        # Get user's completed workouts
+        workouts = Workout.query.filter_by(
+            user_id=current_user.id,
+            completed=True
+        ).order_by(Workout.date.desc()).all()
+        
+        # Format for API response
+        result = []
+        for workout in workouts:
+            # Get exercises for this workout
+            exercises = WorkoutExercise.query.filter_by(workout_id=workout.id).all()
+            
+            # Format exercises for the response
+            workout_exercises = []
+            for exercise in exercises:
+                workout_exercises.append({
+                    'exercise_id': exercise.exercise_id,
+                    'name': exercise.exercise.name,
+                    'completed': exercise.completed
+                })
+            
+            result.append({
+                'id': workout.id,
+                'date': workout.date.strftime('%Y-%m-%d'),
+                'name': workout.name,
+                'exercises': workout_exercises
+            })
+        
+        return jsonify(result)
+    except Exception as e:
+        print(f"Error in completed-workouts API: {str(e)}")
+        return jsonify({'error': str(e)})
 
 @workout_bp.route('/api/<int:workout_id>/totals')
 @login_required
