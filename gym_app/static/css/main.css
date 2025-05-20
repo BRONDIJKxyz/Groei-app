@@ -9,12 +9,14 @@
 }
 
 :root {
-  --color-primary: #4f46e5;
-  --color-primary-dark: #4338ca;
-  --color-secondary: #0ea5e9;
-  --color-success: #22c55e;
-  --color-danger: #ef4444;
-  --color-warning: #f59e0b;
+  /* Standard Color Palette (used by both themes) */
+  --color-primary: #4f46e5; /* Indigo-600 */
+  --color-primary-dark: #4338ca; /* Indigo-700 */
+  --color-secondary: #0ea5e9; /* Sky-500 */
+  --color-success: #22c55e; /* Green-500 */
+  --color-danger: #ef4444; /* Red-500 */
+  --color-warning: #f59e0b; /* Amber-500 */
+  
   --color-gray-50: #f9fafb;
   --color-gray-100: #f3f4f6;
   --color-gray-200: #e5e7eb;
@@ -26,35 +28,67 @@
   --color-gray-800: #1f2937;
   --color-gray-900: #111827;
 
-  /* Dark Theme Palette */
-  --color-bg-dark-primary: #111827;    /* Gray-900 - Main background */
-  --color-bg-dark-secondary: #1f2937;  /* Gray-800 - Cards, sections */
-  --color-bg-dark-tertiary: #374151;   /* Gray-700 - Borders, hover states */
+  /* Generic Application Theme Variables - Default to Light Theme */
+  --app-bg-primary: var(--color-gray-50);
+  --app-bg-secondary: white;
+  --app-bg-tertiary: var(--color-gray-200);
+  --app-text-primary: var(--color-gray-900);
+  --app-text-secondary: var(--color-gray-600);
+  --app-text-placeholder: var(--color-gray-400);
+  --app-border-color: var(--color-gray-300);
+  --app-link-color: var(--color-primary);
+  --app-link-hover-color: var(--color-primary-dark);
+  --app-header-bg: var(--color-primary);
+  --app-header-text: white;
+  --app-card-bg: white;
+  --app-card-border: var(--color-gray-200);
+  --app-card-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  --app-input-bg: white;
+  --app-input-border: var(--color-gray-300);
+  --app-input-text: var(--color-gray-900);
+  --app-input-focus-border: var(--color-primary);
+}
 
-  --color-text-dark-primary: #f3f4f6;    /* Gray-100 - Primary text */
-  --color-text-dark-secondary: #9ca3af;  /* Gray-400 - Secondary text */
-  --color-text-dark-placeholder: #6b7280; /* Gray-500 - Placeholders */
+.dark-theme {
+  --app-bg-primary: var(--color-gray-900);
+  --app-bg-secondary: var(--color-gray-800);
+  --app-bg-tertiary: var(--color-gray-700);
+  --app-text-primary: var(--color-gray-100);
+  --app-text-secondary: var(--color-gray-400);
+  --app-text-placeholder: var(--color-gray-500);
+  --app-border-color: var(--color-gray-700);
+  --app-link-color: var(--color-secondary); /* Sky-500 for dark theme links */
+  --app-link-hover-color: #0284c7; /* Sky-600 */
+  --app-header-bg: var(--color-gray-800);
+  --app-header-text: var(--color-gray-100);
+  --app-card-bg: var(--color-gray-800);
+  --app-card-border: var(--color-gray-700);
+  --app-card-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  --app-input-bg: var(--color-gray-700);
+  --app-input-border: var(--color-gray-600);
+  --app-input-text: var(--color-gray-100);
+  --app-input-focus-border: var(--color-secondary);
 }
 
 html {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   font-size: 16px;
   line-height: 1.5;
-  color: var(--color-text-dark-primary); /* Default text color for dark theme */
+  color: var(--app-text-primary);
 }
 
 body {
-  background-color: var(--color-bg-dark-primary); /* Main background for dark theme */
+  background-color: var(--app-bg-primary);
 }
 
 a {
-  color: var(--color-primary); /* Default link color, can be adjusted */
+  color: var(--app-link-color);
   text-decoration: none;
+  transition: color 0.2s ease-in-out;
 }
 
 a:hover {
-  color: var(--color-primary-dark);
-  text-decoration: underline;
+  color: var(--app-link-hover-color);
 }
 
 button, input, select, textarea {

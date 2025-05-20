@@ -49,7 +49,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="flex flex-col min-h-screen {% if request.endpoint == 'main.dashboard' %}dashboard-page{% endif %}">
-    <header class="shadow-md" style="background-color: var(--color-bg-dark-secondary); color: var(--color-text-dark-primary);">
+    <header class="shadow-md" style="background-color: var(--app-header-bg); color: var(--app-header-text);">
         <nav class="container mx-auto px-4 py-3">
             <div class="flex justify-between items-center">
                 <!-- App Logo - Always visible -->
@@ -88,6 +88,11 @@
                         <a href="{{ url_for('auth.register') }}" class="action-button primary-action">Sign Up</a>
                     {% endif %}
                 </div>
+                
+                <!-- Theme Toggle Button -->
+                <button id="theme-toggle" type="button" class="ml-4 p-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-400" title="Toggle theme">
+                    <i class="fas fa-sun text-lg"></i> <!-- Default to sun icon -->
+                </button>
                 
                 <!-- Mobile action button and menu toggle -->
                 <div class="md:hidden flex items-center">
@@ -197,8 +202,43 @@
     <script src="{{ url_for('static', filename='js/clean-navigation.js') }}"></script>
     <script src="{{ url_for('static', filename='js/progress-database-fix.js') }}"></script>
     
-    <!-- Mobile menu toggle script -->
+    <!-- Theme toggle logic -->
     <script>
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const themeToggleIcon = themeToggleBtn.querySelector('i');
+        const body = document.body;
+
+        const applyTheme = (theme) => {
+            if (theme === 'dark') {
+                body.classList.add('dark-theme');
+                themeToggleIcon.classList.remove('fa-sun');
+                themeToggleIcon.classList.add('fa-moon');
+            } else {
+                body.classList.remove('dark-theme');
+                themeToggleIcon.classList.remove('fa-moon');
+                themeToggleIcon.classList.add('fa-sun');
+            }
+            localStorage.setItem('theme', theme);
+        };
+
+        // Load saved theme or default to light
+        const savedTheme = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        
+        let currentTheme = 'light'; // Default to light
+        if (savedTheme) {
+            currentTheme = savedTheme;
+        } else if (prefersDark) {
+            currentTheme = 'dark'; // If user has OS preference for dark and no saved theme
+        }
+        applyTheme(currentTheme);
+
+        themeToggleBtn.addEventListener('click', () => {
+            const newTheme = body.classList.contains('dark-theme') ? 'light' : 'dark';
+            applyTheme(newTheme);
+        });
+
+        // Mobile menu toggle script
         document.addEventListener('DOMContentLoaded', function() {
             const mobileMenuButton = document.getElementById('mobile-menu-button');
             const mobileMenu = document.getElementById('mobile-menu');
