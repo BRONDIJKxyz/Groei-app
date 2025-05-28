@@ -19,7 +19,8 @@ def seed_exercises():
             'instructions': '1. Lie on a flat bench with feet on the ground\n2. Grip the bar slightly wider than shoulder width\n3. Lower the bar to your mid-chest\n4. Press the bar back to starting position with elbows fully extended',
             'tips': 'Keep your wrists straight and elbows at a 45-degree angle to your body to protect your shoulders.',
             'is_compound': True,
-            'calories_per_hour': 400
+            'calories_per_hour': 400,
+            'image_url': 'https://www.verywellfit.com/thmb/X1QBWh_l0hCIgVwMDJqMog96_QA=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/29-Barbell-Bench-Press-GIF-173d1efa57944f68acb07a1851927585.gif'
         },
         {
             'name': 'Incline Press', 
@@ -54,7 +55,8 @@ def seed_exercises():
             'instructions': '1. Start in a plank position with hands slightly wider than shoulders\n2. Keep your body in a straight line\n3. Lower your chest to the floor by bending your elbows\n4. Push back up to starting position',
             'tips': 'Keep your core engaged throughout the movement to maintain proper form.',
             'is_compound': True,
-            'calories_per_hour': 300
+            'calories_per_hour': 300,
+            'image_url': '/static/images/exercises/default_exercise.png'
         },
         {
             'name': 'Dumbbell Chest Press', 
@@ -278,7 +280,8 @@ def seed_exercises():
             'description': 'A unilateral exercise that builds leg strength, balance, and coordination.',
             'instructions': '1. Stand with feet hip-width apart\n2. Step forward with one leg and lower your body\n3. Both knees should bend to approximately 90 degrees\n4. Push through front foot to return to starting position',
             'is_compound': True,
-            'calories_per_hour': 400
+            'calories_per_hour': 400,
+            'image_url': 'https://media.istockphoto.com/id/1269040098/vector/barbell-lunge-exercise-flat-vector-illustration-isolated-on-white-background-workout.jpg?s=612x612&w=0&k=20&c=T8pL9jG_24fK7G0y9YkxoQu991iJqdYAvq6gfC7H98E='
         },
         {
             'name': 'Leg Extension', 
@@ -437,84 +440,130 @@ def seed_exercises():
     print(f"Added {added_count} new exercises to the database")
 
 def import_exercise_dataset():
-    """Import exercises from the Free Exercise DB dataset."""
+    """Import exercises from the Free Exercise DB dataset (yuhonas/free-exercise-db)."""
     import json
     
-    print("Downloading exercise dataset from Free Exercise DB...")
-    # Download the dataset from GitHub
+    print("Downloading exercise dataset from yuhonas/free-exercise-db on GitHub...")
     url = "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/dist/exercises.json"
-    response = requests.get(url)
-    exercises_data = response.json()
-    
+    try:
+        response = requests.get(url, timeout=30) # Added timeout
+        response.raise_for_status() # Raise an exception for HTTP errors
+        exercises_data = response.json()
+    except requests.exceptions.RequestException as e:
+        print(f"Error downloading exercise dataset: {e}")
+        return
+    except json.JSONDecodeError as e:
+        print(f"Error decoding JSON from exercise dataset: {e}")
+        return
+
     print(f"Processing {len(exercises_data)} exercises from dataset...")
     
     added_count = 0
     skipped_count = 0
-    
+    updated_count = 0
+
+    base_image_url = "https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/"
+
     for ex_data in exercises_data:
-        # Check if exercise already exists
-        existing = Exercise.query.filter_by(name=ex_data['name']).first()
-        if existing:
-            skipped_count += 1
+        exercise_name = ex_data.get('name')
+        if not exercise_name:
+            skipped_count +=1
+            print(f"Skipping entry due to missing name: {ex_data.get('id', 'Unknown ID')}")
             continue
+
+        existing_exercise = Exercise.query.filter_by(name=exercise_name).first()
         
-        # Map the primary muscle group to our categories
-        primary_muscle = ''
-        if 'primary' in ex_data and ex_data['primary']:
-            muscle = ex_data['primary'].lower()
-            # Map to our standardized categories
-            if any(x in muscle for x in ['chest', 'pectoral']):
-                primary_muscle = 'chest'
-            elif any(x in muscle for x in ['back', 'lat', 'trap', 'rhomboid']):
-                primary_muscle = 'back'
-            elif any(x in muscle for x in ['shoulder', 'delt']):
-                primary_muscle = 'shoulders'
-            elif any(x in muscle for x in ['bicep', 'tricep', 'arm', 'forearm']):
-                primary_muscle = 'arms'
-            elif any(x in muscle for x in ['quad', 'hamstring', 'calf', 'glute', 'leg']):
-                primary_muscle = 'legs'
-            elif any(x in muscle for x in ['ab', 'core', 'oblique']):
-                primary_muscle = 'core'
-            elif any(x in muscle for x in ['cardio', 'heart']):
-                primary_muscle = 'cardio'
+        # Map primary muscle group
+        primary_muscles_list = ex_data.get('primaryMuscles')
+        if primary_muscles_list and isinstance(primary_muscles_list, list) and len(primary_muscles_list) > 0 and primary_muscles_list[0] is not None:
+            primary_muscle = primary_muscles_list[0].lower()
+        else:
+            primary_muscle = 'other' # Default if primaryMuscles is missing, empty, or its first element is None
+
+        # Simple mapping, can be expanded
+        muscle_group_map = {
+            'abdominals': 'core',
+            'abductors': 'legs',
+            'adductors': 'legs',
+            'biceps': 'arms',
+            'calves': 'legs',
+            'chest': 'chest',
+            'forearms': 'arms',
+            'glutes': 'legs',
+            'hamstrings': 'legs',
+            'lats': 'back',
+            'lower_back': 'back',
+            'middle_back': 'back',
+            'neck': 'other',
+            'quadriceps': 'legs',
+            'shoulders': 'shoulders',
+            'traps': 'back',
+            'triceps': 'arms',
+            'upper_back': 'back',
+        }
+        mapped_muscle_group = muscle_group_map.get(primary_muscle.replace(" ", "_"), 'other')
+
+        # Construct image URL
+        image_path = None
+        if ex_data.get('images') and isinstance(ex_data['images'], list) and len(ex_data['images']) > 0:
+            image_path = f"{base_image_url}{ex_data['images'][0]}"
+        
+        # Prepare data for Exercise model
+        equipment_val = ex_data.get('equipment')
+        equipment_str = equipment_val.lower() if equipment_val else 'body weight'
+
+        difficulty_val = ex_data.get('level')
+        difficulty_str = difficulty_val.lower() if difficulty_val else 'beginner'
+
+        mechanic_val = ex_data.get('mechanic')
+        is_compound_bool = mechanic_val.lower() == 'compound' if mechanic_val else False
+
+        exercise_params = {
+            'name': exercise_name,
+            'muscle_group': mapped_muscle_group,
+            'secondary_muscle_groups': ', '.join(ex_data.get('secondaryMuscles', [])),
+            'equipment': equipment_str,
+            'difficulty': difficulty_str,
+            'description': ex_data.get('instructions', [])[0] if ex_data.get('instructions') else '', # Using first instruction as description
+            'instructions': '\n'.join(ex_data.get('instructions', [])),
+            'image_url': image_path,
+            'is_compound': is_compound_bool
+        }
+
+        if existing_exercise:
+            # Update existing exercise if necessary (e.g., to add image_url)
+            updated = False
+            for key, value in exercise_params.items():
+                if getattr(existing_exercise, key) != value and value is not None:
+                    setattr(existing_exercise, key, value)
+                    updated = True
+            if updated:
+                updated_count += 1
             else:
-                # Default to closest match if none of the above
-                primary_muscle = 'core'  # Default for most isolation exercises
+                skipped_count += 1
+        else:
+            exercise = Exercise(**exercise_params)
+            db.session.add(exercise)
+            added_count += 1
         
-        # Determine difficulty level
-        difficulty = 'beginner'
-        if 'level' in ex_data:
-            level = ex_data['level'].lower()
-            if 'beginner' in level:
-                difficulty = 'beginner'
-            elif 'intermediate' in level:
-                difficulty = 'intermediate'
-            elif 'advanced' in level or 'expert' in level:
-                difficulty = 'advanced'
+        if (added_count + updated_count) % 50 == 0 and (added_count + updated_count > 0):
+            try:
+                db.session.commit()
+                print(f"Committed batch: Added {added_count}, Updated {updated_count} exercises so far...")
+            except Exception as e:
+                db.session.rollback()
+                print(f"Error committing batch: {e}")
+                # Potentially stop or handle more gracefully
+                return
+
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error committing final batch: {e}")
+        return
         
-        # Create the exercise object
-        exercise = Exercise(
-            name=ex_data['name'],
-            muscle_group=primary_muscle,
-            secondary_muscle_groups=', '.join(ex_data.get('secondary', [])) if 'secondary' in ex_data else '',
-            equipment=ex_data.get('equipment', ''),
-            difficulty=difficulty,
-            description=ex_data.get('description', ''),
-            instructions='\n'.join(ex_data.get('steps', [])) if 'steps' in ex_data else '',
-            image_url=ex_data.get('image', ''),
-            is_compound='compound' in ex_data.get('attributes', [])
-        )
-        
-        db.session.add(exercise)
-        added_count += 1
-        
-        # Commit in batches to avoid memory issues
-        if added_count % 50 == 0:
-            db.session.commit()
-            print(f"Added {added_count} exercises so far...")
-    
-    db.session.commit()
-    print(f"Completed: Added {added_count} new exercises from the dataset (skipped {skipped_count} existing exercises)")
+    print(f"Completed: Added {added_count} new exercises. Updated {updated_count} existing exercises. Skipped {skipped_count} exercises.")
 
 def create_demo_user():
     """Create a demo user account."""

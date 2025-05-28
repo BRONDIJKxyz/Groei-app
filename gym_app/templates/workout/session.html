@@ -54,13 +54,20 @@
                 <div class="exercises-list mt-4">
                     {% if all_exercises %}
                         {% for exercise in all_exercises %}
-                            <form action="{{ url_for('workout.add_exercise', workout_id=workout.id) }}" method="POST" class="exercise-item" data-muscle-group="{{ exercise.muscle_group }}">
+                            <form action="{{ url_for('workout.add_exercise', workout_id=workout.id) }}" method="POST" class="exercise-item flex items-center p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md mb-1" data-muscle-group="{{ exercise.muscle_group }}">
                                 <input type="hidden" name="exercise_id" value="{{ exercise.id }}">
-                                <div class="flex-grow">
-                                    <h3 class="exercise-name">{{ exercise.name }}</h3>
-                                    <div class="exercise-muscle">{{ exercise.muscle_group|title }}</div>
+                                <div class="flex-grow flex items-center">
+                                    {% if exercise.image_url %}
+                                        <img src="{{ exercise.image_url }}" alt="{{ exercise.name }}" class="exercise-sidebar-image mr-3" style="width:50px; height:50px; object-fit: cover; border-radius: 4px; flex-shrink: 0;">
+                                    {% else %}
+                                        <img src="{{ url_for('static', filename='images/exercises/default_exercise.png') }}" alt="Default Exercise Image" class="exercise-sidebar-image mr-3" style="width:50px; height:50px; object-fit: cover; border-radius: 4px; flex-shrink: 0;">
+                                    {% endif %}
+                                    <div class="overflow-hidden">
+                                        <h3 class="exercise-name font-semibold truncate">{{ exercise.name }}</h3>
+                                        <div class="exercise-muscle text-sm text-gray-600 dark:text-gray-400">{{ exercise.muscle_group|title }}</div>
+                                    </div>
                                 </div>
-                                <button type="submit" class="btn btn-sm btn-primary add-exercise-btn">
+                                <button type="submit" class="btn btn-sm btn-primary add-exercise-btn ml-2 flex-shrink-0">
                                     <i class="fas fa-plus"></i>
                                 </button>
                             </form>
