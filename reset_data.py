@@ -9,28 +9,34 @@ def reset_database():
     """Reset the database and reseed it with demo data."""
     with app.app_context():
         try:
-            # Check if the database file exists
-            db_path = app.config['SQLALCHEMY_DATABASE_URI'].replace('sqlite:///', '')
-            
-            print(f"Database path: {db_path}")
-            
-            # Drop all tables and recreate them
-            print("Dropping all tables...")
-            db.drop_all()
-            print("Creating all tables...")
+            # Ensure tables are created
+            print("Ensuring all tables are created...")
             db.create_all()
+
+            # Selectively delete data from tables
+            print("Deleting old data from Exercise and WorkoutExercise tables...")
+            # Execute delete statements. The order might matter due to foreign keys.
+            # If WorkoutExercise has a foreign key to Exercise, delete from WorkoutExercise first.
+            db.session.execute(WorkoutExercise.__table__.delete())
+            db.session.execute(Exercise.__table__.delete())
+            # If you want to reset workouts for the demo user as well, you could do:
+            # demo_user_to_reset = User.query.filter_by(email='demo@example.com').first()
+            # if demo_user_to_reset:
+            #     Workout.query.filter_by(user_id=demo_user_to_reset.id).delete()
+            db.session.commit()
+            print("Old exercise data deleted.")
             
             # Seed database with exercises and demo user
             print("Seeding exercises...")
             seed_exercises()
             print("Importing exercise dataset...")
             import_exercise_dataset()
-            print("Creating demo user...")
+            print("Creating/Verifying demo user...")
             demo_user = create_demo_user()
-            print("Creating sample workouts...")
-            create_sample_workouts(demo_user, force_recreate=True)
+            print("Creating sample workouts for demo user (if needed)...")
+            create_sample_workouts(demo_user, force_recreate=True) # force_recreate might need adjustment if it also deletes user's workouts
             
-            print("Database reset and reseeded successfully!")
+            print("Database reseeded successfully (users preserved)!")
             return True
         except Exception as e:
             print(f"Error resetting database: {str(e)}")
