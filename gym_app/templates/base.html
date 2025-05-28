@@ -90,8 +90,8 @@
                 </div>
                 
                 <!-- Theme Toggle Button -->
-                <button id="theme-toggle" type="button" class="ml-4 p-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-400" title="Toggle theme">
-                    <i class="fas fa-sun text-lg"></i> <!-- Default to sun icon -->
+                <button id="theme-toggle" type="button" title="Toggle theme">
+                    <i class="fas fa-moon text-lg"></i> <!-- Default to moon icon in light mode -->
                 </button>
                 
                 <!-- Mobile action button and menu toggle -->
@@ -211,12 +211,12 @@
         const applyTheme = (theme) => {
             if (theme === 'dark') {
                 body.classList.add('dark-theme');
-                themeToggleIcon.classList.remove('fa-sun');
-                themeToggleIcon.classList.add('fa-moon');
+                themeToggleIcon.classList.remove('fa-moon');
+                themeToggleIcon.classList.add('fa-sun'); // Show sun in dark mode (to switch to light)
             } else {
                 body.classList.remove('dark-theme');
-                themeToggleIcon.classList.remove('fa-moon');
-                themeToggleIcon.classList.add('fa-sun');
+                themeToggleIcon.classList.remove('fa-sun');
+                themeToggleIcon.classList.add('fa-moon'); // Show moon in light mode (to switch to dark)
             }
             localStorage.setItem('theme', theme);
         };

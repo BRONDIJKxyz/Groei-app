@@ -38,8 +38,8 @@
   --app-border-color: var(--color-gray-300);
   --app-link-color: var(--color-primary);
   --app-link-hover-color: var(--color-primary-dark);
-  --app-header-bg: var(--color-primary);
-  --app-header-text: white;
+  --app-header-bg: var(--color-gray-100);
+  --app-header-text: var(--color-gray-900);
   --app-card-bg: white;
   --app-card-border: var(--color-gray-200);
   --app-card-shadow: 0 1px 3px rgba(0,0,0,0.1);
@@ -59,7 +59,7 @@
   --app-border-color: var(--color-gray-700);
   --app-link-color: var(--color-secondary); /* Sky-500 for dark theme links */
   --app-link-hover-color: #0284c7; /* Sky-600 */
-  --app-header-bg: var(--color-gray-800);
+  --app-header-bg: var(--color-gray-900);
   --app-header-text: var(--color-gray-100);
   --app-card-bg: var(--color-gray-800);
   --app-card-border: var(--color-gray-700);
@@ -93,6 +93,103 @@ a:hover {
 
 button, input, select, textarea {
   font: inherit;
+}
+
+/* Apple-style buttons */
+.action-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1.25rem;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  margin-left: 0.5rem;
+  font-size: 0.9rem;
+  border: none;
+  cursor: pointer;
+}
+
+.primary-action {
+  background-color: var(--app-link-color);
+  color: white;
+}
+
+.primary-action:hover {
+  background-color: var(--app-link-hover-color);
+  color: white;
+}
+
+.secondary-action {
+  background-color: var(--app-bg-secondary);
+  color: var(--app-text-primary);
+  border: 1px solid var(--app-border-color);
+}
+
+.secondary-action:hover {
+  background-color: var(--app-bg-tertiary);
+}
+
+/* Theme toggle button styling */
+#theme-toggle {
+  background-color: var(--app-bg-secondary);
+  color: var(--app-text-secondary);
+  border: 1px solid var(--app-border-color);
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  margin-left: 0.75rem;
+}
+
+#theme-toggle:hover {
+  background-color: var(--app-bg-tertiary);
+  color: var(--app-text-primary);
+}
+
+/* App logo styling */
+.app-logo {
+  display: flex;
+  align-items: center;
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: var(--app-text-primary);
+}
+
+.app-logo i {
+  margin-right: 0.5rem;
+  color: var(--app-link-color);
+}
+
+/* Main navigation links */
+.main-nav {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.nav-item {
+  color: var(--app-text-secondary);
+  position: relative;
+  padding: 0.5rem 0;
+}
+
+.nav-item:hover, .nav-item.active {
+  color: var(--app-text-primary);
+}
+
+.nav-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: var(--app-link-color);
+  border-radius: 2px;
 }
 
 /* Utility Classes */
